@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zeus"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[project]
+name = "zeus"
+version = "1.0.0-alpha1"
+authors = [
+  { name="Jiří Mayer", email="mayer@ufal.mff.cuni.cz" },
+]
+dependencies = [
+    "tensorflow~=2.12.0",
+    "pyyaml",
+    "tqdm",
+    "linearized-musicxml @ git+https://github.com/OMR-Research/lmx.git@8648514f5bfa08c594277b2d7821a156c75dd299",
+    "levenshtein"
+]
+description = "Image-to-sequence model Optical Music Recognition"
+readme = "README.md"
+requires-python = "~=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Natural Language :: English",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/OmniOMR/zeus"
+Issues = "https://github.com/OmniOMR/zeus/issues"
+
+[project.gui-scripts]
+zeus = "zeus.cli.run:run"
