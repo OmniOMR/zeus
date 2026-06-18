@@ -88,3 +88,36 @@ Optionally, samples may contain `.musicxml` data files. These MusicXML files sho
 These files are optional, but for the whole dataset. Either all samples should have it, or all files should miss it.
 
 Its only purpose is to allow for MusicXML-to-MusicXML evaluation, such as tree edit distance, musicdiff, or music tree notation. It is not used for model training nor inference.
+
+
+## Pickling
+
+To speed up dataset loading on the compute cluster (lots of small files are slow to load), a pickled representation is used for model training and evaluation. The CLI command `zeus pickle` can be used to bundle up a Zeus dataset slice into a pickle file.
+
+While a normal Zeus dataset slice is identified by the `samples.split.txt` file, a pickled slice is fully contained in `samples.split.pickle` file. The convention is that these pickled files should sit in the root of their respective datasets, however they no longer need the `samples` directory to be present.
+
+Example dataset with both pickled and unpickled files (e.g. on your laptop):
+
+```
+my-dataset/ 📚
+│
+├── samples.train.txt 🪓
+├── samples.dev.txt 🪓
+├── samples.test.txt 🪓
+│
+├── samples.train.pickle 🥒
+├── samples.dev.pickle 🥒
+├── samples.test.pickle 🥒
+│
+└── samples/
+    └── ...
+```
+
+And the same dataset with only the pickled representation (e.g. when uploaded to a compute cluster):
+
+```
+my-dataset/ 📚
+├── samples.train.pickle 🥒
+├── samples.dev.pickle 🥒
+└── samples.test.pickle 🥒
+```
