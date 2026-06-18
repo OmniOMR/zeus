@@ -1,20 +1,20 @@
 from pathlib import Path
-from .RawDatasetSample import RawDatasetSample
+from .PickledDatasetSample import PickledDatasetSample
 import tensorflow as tf
 import re
 import numpy as np
 import random
-from .ArchitectureOptions import ArchitectureOptions
-from .TokenMap import TokenMap
+from ..model.ArchitectureOptions import ArchitectureOptions
+from ..model.TokenMap import TokenMap
 from typing import Iterable
-from .TrainingOptions import TrainingOptions
-from .InferenceOptions import InferenceOptions
+from ..model.TrainingOptions import TrainingOptions
+from ..model.InferenceOptions import InferenceOptions
 
 
-class LMXDataset:
+class PickledDataset:
     """Represents a dataset of images and their LMX annotations"""
     
-    def __init__(self, name: str, samples: list[RawDatasetSample]) -> None:
+    def __init__(self, name: str, samples: list[PickledDatasetSample]) -> None:
         self.name = name
         """Human-readable name of the dataset, used in logs, must be path-safe"""
 
@@ -30,20 +30,20 @@ class LMXDataset:
         random.Random(42).shuffle(self.shuffled_view)
 
     @staticmethod
-    def from_pickle_file(pickle_path: Path) -> "LMXDataset":
+    def from_pickle_file(pickle_path: Path) -> "PickledDataset":
         """Loads a dataset from its pickled representation"""
-        samples = RawDatasetSample.load_samples(pickle_path)
+        samples = PickledDatasetSample.load_samples(pickle_path)
         name = pickle_path.as_posix()
         if name.startswith("datasets/"):
             name = name[len("datasets/"):]
         name = name.replace("/", "_")
-        return LMXDataset(
+        return PickledDataset(
             name=name,
             samples=samples,
         )
     
     @staticmethod
-    def combine_multiple(datasets: list["LMXDataset"]) -> "LMXDataset":
+    def combine_multiple(datasets: list["PickledDataset"]) -> "PickledDataset":
         """Combines multiple LMX datasets into one"""
         assert len(datasets) > 0
 
@@ -53,13 +53,13 @@ class LMXDataset:
         
         # combine
         name = ""
-        samples: list[RawDatasetSample] = []
+        samples: list[PickledDatasetSample] = []
         for dataset in datasets:
             samples += dataset.samples
             if name != "":
                 name += "-and-"
             name += dataset.name
-        return LMXDataset(
+        return PickledDataset(
             name=name,
             samples=samples,
         )

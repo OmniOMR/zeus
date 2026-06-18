@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from ..InferenceOptions import InferenceOptions
+from ..model.InferenceOptions import InferenceOptions
 from datetime import datetime
 
 
@@ -37,8 +37,8 @@ def define_parser(parser: argparse.ArgumentParser):
 
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # deffered imports as they import tensorflow which is slow
-    from ..Zeus import Zeus
-    from ..LMXDataset import LMXDataset
+    from ..model.Zeus import Zeus
+    from ..data.PickledDataset import PickledDataset
 
     # prepare CLI arguments
     model_folder_path = Path(args.model)
@@ -47,7 +47,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     batch_size = int(args.batch_size)
 
     # load the dataset
-    dataset = LMXDataset.from_pickle_file(dataset_pickle_path)
+    dataset = PickledDataset.from_pickle_file(dataset_pickle_path)
     dataset.print_statistics()
 
     # run model prediction

@@ -1,7 +1,7 @@
 import argparse
-from ..Samples import Samples
+from ..data.ZeusDatasetSamples import ZeusDatasetSamples
 from pathlib import Path
-from ..RawDatasetSample import RawDatasetSample
+from ..data.PickledDatasetSample import PickledDatasetSample
 import tqdm
 
 
@@ -37,9 +37,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     image_suffix = str(args.image_suffix)
     with_musicxml = bool(args.with_musicxml)
     
-    raw_dataset_samples: list[RawDatasetSample] = []
+    raw_dataset_samples: list[PickledDatasetSample] = []
     
-    samples = Samples.load(samples_path)
+    samples = ZeusDatasetSamples.load(samples_path)
     with tqdm.tqdm(total=len(samples)) as pbar:
         for sample in samples:
 
@@ -68,7 +68,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
                     .with_suffix(".musicxml") \
                     .read_text()
             
-            raw_dataset_samples.append(RawDatasetSample(
+            raw_dataset_samples.append(PickledDatasetSample(
                 sample_name=sample.name,
                 image=image,
                 lmx=lmx,
@@ -82,7 +82,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         samples_path=samples_path,
         image_suffix=image_suffix
     )
-    RawDatasetSample.write_samples(
+    PickledDatasetSample.write_samples(
         pickle_path=pickle_path,
         samples=raw_dataset_samples,
     )

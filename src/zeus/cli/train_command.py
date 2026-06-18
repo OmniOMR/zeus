@@ -1,9 +1,9 @@
 import argparse
 from pathlib import Path
-from ..ArchitectureOptions import ArchitectureOptions
-from ..TrainingOptions import TrainingOptions
-from ..InferenceOptions import InferenceOptions
-from ..TokenMap import TokenMap
+from ..model.ArchitectureOptions import ArchitectureOptions
+from ..model.TrainingOptions import TrainingOptions
+from ..model.InferenceOptions import InferenceOptions
+from ..model.TokenMap import TokenMap
 from datetime import datetime
 import os
 
@@ -115,8 +115,8 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     
     # deffered imports as they import tensorflow which is slow
-    from ..LMXDataset import LMXDataset
-    from ..Zeus import Zeus
+    from ..data.PickledDataset import PickledDataset
+    from ..model.Zeus import Zeus
     import tensorflow as tf
 
     # prepare CLI arguments
@@ -147,24 +147,24 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # load training datasets
     train_datasets = [
-        LMXDataset.from_pickle_file(path)
+        PickledDataset.from_pickle_file(path)
         for path in train_pickle_paths
     ]
     for d in train_datasets: d.print_statistics()
-    train_dataset = LMXDataset.combine_multiple(train_datasets)
+    train_dataset = PickledDataset.combine_multiple(train_datasets)
     print("Combined train dataset: ", end="")
     train_dataset.print_statistics()
 
     # load validation datasets
     dev_datasets = [
-        LMXDataset.from_pickle_file(path)
+        PickledDataset.from_pickle_file(path)
         for path in dev_pickle_paths
     ]
     for d in dev_datasets: d.print_statistics()
 
     # load test datasets
     test_datasets = [
-        LMXDataset.from_pickle_file(path)
+        PickledDataset.from_pickle_file(path)
         for path in test_pickle_paths
     ]
     for d in test_datasets: d.print_statistics()

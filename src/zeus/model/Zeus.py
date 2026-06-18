@@ -6,10 +6,10 @@ import tensorflow as tf
 import contextlib
 from .KerasModel import KerasModel
 from .TokenMap import TokenMap
-from .LMXDataset import LMXDataset
+from ..data.PickledDataset import PickledDataset
 from .TrainingOptions import TrainingOptions
 from .InferenceOptions import InferenceOptions
-from .ser_metric import ser_metric
+from ..evaluation.ser_metric import ser_metric
 
 
 class Zeus:
@@ -112,9 +112,9 @@ class Zeus:
     
     def train(
             self,
-            train_dataset: LMXDataset,
-            dev_datasets: list[LMXDataset],
-            test_datasets: list[LMXDataset],
+            train_dataset: PickledDataset,
+            dev_datasets: list[PickledDataset],
+            test_datasets: list[PickledDataset],
             training_options: TrainingOptions,
             inference_options_for_evaluation: InferenceOptions,
             logdir_path: Path,
@@ -202,7 +202,7 @@ class Zeus:
 
     def visualize_training_data(
             self,
-            train_dataset: LMXDataset,
+            train_dataset: PickledDataset,
             training_options: TrainingOptions,
             output_folder_path: Path,
             sample_count=100,
@@ -271,7 +271,7 @@ class Zeus:
     def visualize_predictions(
             self,
             title: str,
-            dataset: LMXDataset,
+            dataset: PickledDataset,
             predictions_lmx: list[str],
             output_html_path: Path,
             sample_count=100,
@@ -341,7 +341,7 @@ class Zeus:
     
     def evaluate(
             self,
-            dataset: LMXDataset,
+            dataset: PickledDataset,
             inference_options: InferenceOptions,
             with_progress_bar: bool,
             write_predictions_to: Path | None = None,

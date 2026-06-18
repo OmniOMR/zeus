@@ -1,5 +1,5 @@
 from pathlib import Path
-from .RawDatasetSample import RawDatasetSample
+from ..data.PickledDatasetSample import PickledDatasetSample
 
 
 class TokenMap:
@@ -96,7 +96,7 @@ class TokenMap:
         return len(self.tokens)
     
     @staticmethod
-    def create_from_dataset(raw_samples: list[RawDatasetSample]) -> "TokenMap":
+    def create_from_dataset(raw_samples: list[PickledDatasetSample]) -> "TokenMap":
         """Creates a map for only those tokens that are present in the
         given (training) dataset. Useful when training a new model."""
         tokens = ["<bos/eos>", "<unk>"]
@@ -118,10 +118,10 @@ class TokenMap:
         """Creates a map for all the tokens in the LMX vocabulary,
         as defined by the LMX package. May change version to version
         so still needs to be persisted."""
-        import lmx.linearization.vocabulary
+        import lmx.tokenization.vocabulary
         return TokenMap(
             tokens=["<bos/eos>", "<unk>"] +
-                lmx.linearization.vocabulary.ALL_TOKENS,
+                lmx.tokenization.vocabulary.ALL_TOKENS,
             bos_token_index=0,
             eos_token_index=0,
             unknown_token_index=1

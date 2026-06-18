@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
-from ..ArchitectureOptions import ArchitectureOptions
-from ..TokenMap import TokenMap
+from ..model.ArchitectureOptions import ArchitectureOptions
+from ..model.TokenMap import TokenMap
 import os
 from datetime import datetime
 
@@ -30,15 +30,15 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     
     # deffered imports as they import tensorflow which is slow
-    from ..LMXDataset import LMXDataset
-    from ..Zeus import Zeus
+    from ..data.PickledDataset import PickledDataset
+    from ..model.Zeus import Zeus
 
     # prepare CLI arguments
     dataset_pickle_path = Path(args.dataset)
     predictions_file_path = Path(args.predictions)
 
     # load the dataset
-    dataset = LMXDataset.from_pickle_file(dataset_pickle_path)
+    dataset = PickledDataset.from_pickle_file(dataset_pickle_path)
     dataset.print_statistics()
 
     # load predictions
