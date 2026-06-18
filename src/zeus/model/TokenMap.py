@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..data.PickledDatasetSample import PickledDatasetSample
+from ..data.ZeusDatasetSample import ZeusDatasetSample
 
 
 class TokenMap:
@@ -96,12 +96,12 @@ class TokenMap:
         return len(self.tokens)
     
     @staticmethod
-    def create_from_dataset(raw_samples: list[PickledDatasetSample]) -> "TokenMap":
+    def create_from_dataset(samples: list[ZeusDatasetSample]) -> "TokenMap":
         """Creates a map for only those tokens that are present in the
         given (training) dataset. Useful when training a new model."""
         tokens = ["<bos/eos>", "<unk>"]
         
-        for sample in raw_samples:
+        for sample in samples:
             for token in sample.lmx.split():
                 if token not in tokens:
                     tokens.append(token)

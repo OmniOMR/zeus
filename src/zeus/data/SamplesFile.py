@@ -1,10 +1,30 @@
 from pathlib import Path
 from typing import overload
-from .ZeusDatasetSample import ZeusDatasetSample
+from dataclasses import dataclass
 
 
-class ZeusDatasetSamples:
-    """Represents a samples file for a dataset, e.g. 'samples.train.txt'"""
+@dataclass
+class Sample:
+    """One sample from a samples file"""
+    name: str
+    """The exact string that is in the samples file on one line."""
+    
+    path: Path
+    """
+    Absolute path to the sample, without sample type suffix.
+
+    The ".jpg" or "_distorted.jpg" or ".lmx" must be added
+    to actually point to a file.
+    """
+
+
+class SamplesFile:
+    """
+    Represents a samples file for a dataset, e.g. 'samples.train.txt'.
+    This file is an index containing paths to sample data. It is used in
+    the Zeus dataset format, in the unpickled form. When this file is loaded,
+    the actual data (images, LMX) is NOT loaded.
+    """
     
     def __init__(self, file_path: Path):
         self.file_path: Path = file_path
@@ -15,17 +35,17 @@ class ZeusDatasetSamples:
         samples, the file may not yet exist.
         """
 
-        self.__samples: list[ZeusDatasetSample] = []
+        self.__samples: list[Sample] = []
         
     
-    def append(self, sample_name: str) -> ZeusDatasetSample:
+    def append(self, sample_name: str) -> Sample:
         """
         Appends a sample to the list of samples and returns the new sample.
         
         Example sample name:
         `samples/chopin/mazurkas/mazurka17-2/maj2_down_m-0-3`
         """
-        sample = ZeusDatasetSample(
+        sample = Sample(
             name=sample_name,
             path=self.file_path.parent / sample_name
         )
@@ -39,18 +59,18 @@ class ZeusDatasetSamples:
         yield from self.__samples
     
     @overload
-    def __getitem__(self, index: int) -> ZeusDatasetSample:
+    def __getitem__(self, index: int) -> Sample:
         pass
 
     @overload
-    def __getitem__(self, index: slice) -> "ZeusDatasetSamples":
+    def __getitem__(self, index: slice) -> "SamplesFile":
         pass
 
     def __getitem__(self, index: int | slice):
         if isinstance(index, int):
             return self.__samples[index]
         elif isinstance(index, slice):
-            subset = ZeusDatasetSamples(
+            subset = SamplesFile(
                 self.file_path.with_name(
                     self.file_path.name
                     + f"-slice_{index.start}_{index.stop}_{index.step}"
@@ -68,15 +88,15 @@ class ZeusDatasetSamples:
                 f.write(sample.name + "\n")
 
     @staticmethod
-    def load(file_path: Path) -> "ZeusDatasetSamples":
+    def load(file_path: Path) -> "SamplesFile":
         """Loads a samples file"""
-        samples = ZeusDatasetSamples(file_path)
+        samples = SamplesFile(file_path)
         with open(file_path, "r") as f:
             for line in f.readlines():
                 samples.append(line.strip())
         return samples
     
     @staticmethod
-    def empty(file_path: Path) -> "ZeusDatasetSamples":
+    def empty(file_path: Path) -> "SamplesFile":
         """Creates a new and empty samples file (in-memory before written)"""
-        return ZeusDatasetSamples(file_path)
+        return SamplesFile(file_path)

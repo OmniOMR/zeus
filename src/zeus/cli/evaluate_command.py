@@ -38,7 +38,7 @@ def define_parser(parser: argparse.ArgumentParser):
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # deffered imports as they import tensorflow which is slow
     from ..model.Zeus import Zeus
-    from ..data.PickledDataset import PickledDataset
+    from ..data.ZeusDataset import ZeusDataset
 
     # prepare CLI arguments
     model_folder_path = Path(args.model)
@@ -47,7 +47,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     batch_size = int(args.batch_size)
 
     # load the dataset
-    dataset = PickledDataset.from_pickle_file(dataset_pickle_path)
+    dataset = ZeusDataset.load_from_pickle_file(dataset_pickle_path)
     dataset.print_statistics()
 
     # run model prediction

@@ -30,7 +30,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     
     # deffered imports as they import tensorflow which is slow
-    from ..data.PickledDataset import PickledDataset
+    from ..data.ZeusDataset import ZeusDataset
     from ..model.Zeus import Zeus
 
     # prepare CLI arguments
@@ -38,7 +38,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     predictions_file_path = Path(args.predictions)
 
     # load the dataset
-    dataset = PickledDataset.from_pickle_file(dataset_pickle_path)
+    dataset = ZeusDataset.load_from_pickle_file(dataset_pickle_path)
     dataset.print_statistics()
 
     # load predictions

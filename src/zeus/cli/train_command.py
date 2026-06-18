@@ -4,6 +4,7 @@ from ..model.ArchitectureOptions import ArchitectureOptions
 from ..model.TrainingOptions import TrainingOptions
 from ..model.InferenceOptions import InferenceOptions
 from ..model.TokenMap import TokenMap
+from ..data.ShuffledView import ShuffledView
 from datetime import datetime
 import os
 
@@ -115,7 +116,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     
     # deffered imports as they import tensorflow which is slow
-    from ..data.PickledDataset import PickledDataset
+    from ..data.ZeusDataset import ZeusDataset
     from ..model.Zeus import Zeus
     import tensorflow as tf
 
@@ -147,24 +148,30 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # load training datasets
     train_datasets = [
-        PickledDataset.from_pickle_file(path)
+        ZeusDataset.load_from_pickle_file(path)
         for path in train_pickle_paths
     ]
     for d in train_datasets: d.print_statistics()
-    train_dataset = PickledDataset.combine_multiple(train_datasets)
+    train_dataset = ZeusDataset.combine_multiple(train_datasets)
     print("Combined train dataset: ", end="")
     train_dataset.print_statistics()
 
+    # create a shuffled view of the train dataset
+    shuffled_train_dataset = ShuffledView.create_random_for(
+        dataset=train_dataset,
+        seed=seed,
+    )
+
     # load validation datasets
     dev_datasets = [
-        PickledDataset.from_pickle_file(path)
+        ZeusDataset.load_from_pickle_file(path)
         for path in dev_pickle_paths
     ]
     for d in dev_datasets: d.print_statistics()
 
     # load test datasets
     test_datasets = [
-        PickledDataset.from_pickle_file(path)
+        ZeusDataset.load_from_pickle_file(path)
         for path in test_pickle_paths
     ]
     for d in test_datasets: d.print_statistics()
@@ -180,7 +187,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # train the new model
     zeus.train(
-        train_dataset=train_dataset,
+        shuffled_train_dataset=shuffled_train_dataset,
         dev_datasets=dev_datasets,
         test_datasets=test_datasets,
         training_options=TrainingOptions(

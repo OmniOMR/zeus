@@ -6,9 +6,11 @@ import tensorflow as tf
 import contextlib
 from .KerasModel import KerasModel
 from .TokenMap import TokenMap
-from ..data.PickledDataset import PickledDataset
+from ..data.ZeusDataset import ZeusDataset
+from ..data.ShuffledView import ShuffledView
 from .TrainingOptions import TrainingOptions
 from .InferenceOptions import InferenceOptions
+from .construct_tf_dataset import construct_tf_dataset
 from ..evaluation.ser_metric import ser_metric
 
 
@@ -112,9 +114,9 @@ class Zeus:
     
     def train(
             self,
-            train_dataset: PickledDataset,
-            dev_datasets: list[PickledDataset],
-            test_datasets: list[PickledDataset],
+            shuffled_train_dataset: ShuffledView,
+            dev_datasets: list[ZeusDataset],
+            test_datasets: list[ZeusDataset],
             training_options: TrainingOptions,
             inference_options_for_evaluation: InferenceOptions,
             logdir_path: Path,
@@ -124,14 +126,16 @@ class Zeus:
         and final results into the output logdir. It also stores the final
         model weights.
 
-        :param train_dataset: The dataset that should be used for training.
+        :param shuffled_train_dataset: The dataset that should be used for training,
+            wrapped in a shuffled view.
         :param training_options: Parameters of the training process.
         :param logdir_path: Path to the directory where TensorBoard output
             will be logged as well as evaluation results and intermediate
             and final weights of the model.
         """
         # prepare the training dataset
-        train_tf_dataset = train_dataset.construct_tf_dataset(
+        train_tf_dataset = construct_tf_dataset(
+            shuffled_view=shuffled_train_dataset,
             architecture_options=self.architecture_options,
             token_map=self.token_map,
             training_or_inference_options=training_options
@@ -202,7 +206,7 @@ class Zeus:
 
     def visualize_training_data(
             self,
-            train_dataset: PickledDataset,
+            shuffled_train_dataset: ShuffledView,
             training_options: TrainingOptions,
             output_folder_path: Path,
             sample_count=100,
@@ -214,7 +218,8 @@ class Zeus:
         (creates the folder if missing).
         """
         # prepare the training dataset
-        train_tf_dataset = train_dataset.construct_tf_dataset(
+        train_tf_dataset = construct_tf_dataset(
+            shuffled_view=shuffled_train_dataset,
             architecture_options=self.architecture_options,
             token_map=self.token_map,
             training_or_inference_options=training_options
@@ -231,7 +236,7 @@ class Zeus:
         html_file_path = output_folder_path / "index.html"
         
         # dump images and HTML
-        html = f"<html><body><h1>{train_dataset.name}</h1>"
+        html = f"<html><body><h1>{shuffled_train_dataset.dataset.name}</h1>"
         sample_index = 0
         batch_index = 0
         for batch_images, batch_annotations in train_tf_dataset:
@@ -271,7 +276,7 @@ class Zeus:
     def visualize_predictions(
             self,
             title: str,
-            dataset: PickledDataset,
+            dataset: ZeusDataset,
             predictions_lmx: list[str],
             output_html_path: Path,
             sample_count=100,
@@ -341,7 +346,7 @@ class Zeus:
     
     def evaluate(
             self,
-            dataset: PickledDataset,
+            dataset: ZeusDataset,
             inference_options: InferenceOptions,
             with_progress_bar: bool,
             write_predictions_to: Path | None = None,
@@ -358,7 +363,8 @@ class Zeus:
         their paths are provided.
         """
         # prepare the dataset
-        tf_dataset = dataset.construct_tf_dataset(
+        tf_dataset = construct_tf_dataset(
+            shuffled_view=ShuffledView.create_unshuffled_for(dataset),
             architecture_options=self.architecture_options,
             token_map=self.token_map,
             training_or_inference_options=inference_options

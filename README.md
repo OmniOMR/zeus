@@ -23,14 +23,14 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 
 ## Documentation
 
-- Zeus dataset format and pickling
+- [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
+- [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
 - Converting MusiCorpus datasets to Zeus format
 - Model architecture
 - Model snapshots
 - Training Zeus
 - Training on the UFAL LRC cluster
 - ...
-- TODO: LMX and MusicXML
 - TODO: Prediction, streaming
 - TODO: Python API
 
