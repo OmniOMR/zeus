@@ -97,7 +97,15 @@ root_command_handlers["pickle"] = zeus.cli.pickle_command.execute
 
 # === musicorpus ===
 
-# TODO
+import zeus.cli.musicorpus_command
+zeus.cli.musicorpus_command.define_parser(
+    subparsers.add_parser(
+        "musicorpus",
+        aliases=[],
+        description="Converts a MusiCorpus dataset into a Zeus dataset"
+    )
+)
+root_command_handlers["musicorpus"] = zeus.cli.musicorpus_command.execute
 
 
 ######################

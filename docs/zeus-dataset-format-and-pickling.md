@@ -121,3 +121,11 @@ my-dataset/ 📚
 ├── samples.dev.pickle 🥒
 └── samples.test.pickle 🥒
 ```
+
+This is an example of how to use the CLI command to pickle a samples file:
+
+```bash
+zeus pickle datasets/dolores/samples.all.txt
+```
+
+The command will create the `.pickle` file next to the samples file.

@@ -25,7 +25,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 
 - [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
 - [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
-- Converting MusiCorpus datasets to Zeus format
+- [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
 - Model architecture
 - Model snapshots
 - Training Zeus
