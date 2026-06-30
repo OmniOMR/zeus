@@ -108,6 +108,19 @@ zeus.cli.musicorpus_command.define_parser(
 root_command_handlers["musicorpus"] = zeus.cli.musicorpus_command.execute
 
 
+# === render ===
+
+import zeus.cli.render_command
+zeus.cli.render_command.define_parser(
+    subparsers.add_parser(
+        "render",
+        aliases=[],
+        description="Renders Zeus dataset MusicXML samples via MuseScore"
+    )
+)
+root_command_handlers["render"] = zeus.cli.render_command.execute
+
+
 ######################
 # Execute the parser #
 ######################

@@ -15,6 +15,7 @@ Zeus is a deep learning model for reading staves and grandstaves of music notati
 The package exposes the `zeus` CLI command, which should be used to work with the model:
 
 - `zeus` **`musicorpus`** `--help`: Converts a [MusiCorpus](https://github.com/OmniOMR/musicorpus) dataset to Zeus dataset.
+- `zeus` **`render`** `--help`: Renders one Zeus dataset split via MuseScore to B/W images. Uses MusicXML files as input.
 - `zeus` **`pickle`** `--help`: Bundles one Zeus dataset split into a pickle file for faster loading on the compute cluster.
 - `zeus` **`train`** `--help`: Trains a Zeus model, both new or loaded.
 - `zeus` **`evaluate`** `--help`: Performs symbol error rate evaluation on LMX against the given dataset split.
