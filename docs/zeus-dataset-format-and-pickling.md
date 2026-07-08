@@ -129,3 +129,67 @@ zeus pickle datasets/dolores/samples.all.txt
 ```
 
 The command will create the `.pickle` file next to the samples file.
+
+
+## Image suffixes
+
+One Zeus dataset may contain images in multiple variants (for the same MusicXML/LMX annotation) using so-called image suffixes. This was first used for the GrandStaff Camera-Ready dataset, where the GrandStaff LMX contains both the plain images and the Camera-Ready distorted images in one, organized like this:
+
+```
+my-dataset/
+├── ...
+└── samples/
+    └── any-subfolders/
+        ├── my-sample-1.jpg 🖼️
+        ├── my-sample-1_distorted.jpg 🖼️    (suffixed image)
+        ├── my-sample-1.lmx 🎼
+        ├── my-sample-1.musicxml 📄
+        │
+        ├── my-sample-2.jpg 🖼️
+        ├── my-sample-2_distorted.jpg 🖼️    (suffixed image)
+        ├── my-sample-2.lmx 🎼
+        ├── my-sample-2.musicxml 📄
+        │
+        └── ...
+```
+
+When browsing the data in the file system, you can see side-by-side all variants of the same image. When pickling the data, you have to choose one and the resulting pickle file will only contain one annotation-image pair for each sample:
+
+```bash
+zeus pickle --image_suffix '_distorted' datasets/grandstaff/samples.all.txt
+```
+
+This command creates a `samples_distorted.all.pickle` file in the dataset folder.
+
+You can use image suffixes to:
+
+- Create augmented variants of original images, use the `_distorted` suffix to stay consistent with GrandStaff
+- Render MusicXML into B/W image for debugging (e.g. render invisible symbols) to see what is in the MusicXML data, use the `_debug` suffix.
+- Render MusicXML into B/W image for training (e.g. as additional training data for a scanned dataset), use the `_rendered` suffix.
+
+
+## Rendering MusicXML samples
+
+The `zeus` CLI lets you render the `.musicxml` samples of a dataset into B/W `.png` files using MuseScore (using the LMX package). This is the command to do so:
+
+```bash
+zeus render \
+    --image_suffix '_debug' \
+    --render_invisible \
+    --page_width_tenths 6_000 \
+    datasets/dolores/samples.all.txt
+```
+
+The command above renders `.musicxml` file for debugging purposes, which means it renders invisible header clefs in gray. For each `my-sample.musicxml` file it creates a `my-sample_debug.png` file in the same folder.
+
+You can also render samples for training purposes (or pre-training) using this command:
+
+```bash
+zeus render \
+    --image_suffix '_rendered' \
+    datasets/dolores/samples.all.txt
+```
+
+The command creates a `musescore/` folder in the current working directory and downloads MuseScore there. If you're calling it from the root of your repository, make sure to add the `/musescore/` path to your `.gitignore` file.
+
+The command needs a maximum page-width specification, adjusted via the `--page_width_tenths` option. The default is set such that the resulting images are not too wide (if the MusicXML contains too much content or is fauly - e.g. expanded multi-measure rests). 40 tenths are one staff height. Samples that do not fit the page width will not be rendered (and their list is printed afterwards).

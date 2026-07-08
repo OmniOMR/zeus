@@ -26,12 +26,24 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Render invisible clefs and signatures in gray, " +
             "useful for data inspection."
     )
+    parser.add_argument(
+        "--page_width_tenths",
+        default=2_500,
+        type=int,
+        help="How wide of a paper should be used to render each sample. " +
+            "A paper too narrow will overflow and fail rendering for that sample. " +
+            "This may also be used to control the maximum image width. " +
+            "40 tenths is one staff height. The default width is set at a " +
+            "reasonable image aspect ratio for OMR models, may be increased " +
+            "for debug images, say to 6_000."
+    )
 
 
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     samples_path = Path(args.samples_file_path)
     image_suffix = str(args.image_suffix)
     render_invisible = bool(args.render_invisible)
+    page_width_tenths = int(args.page_width_tenths)
     
     if not samples_path.exists():
         print("There is no file at", samples_path)
@@ -45,4 +57,5 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         image_suffix=image_suffix,
         render_invisible=render_invisible,
         batch_size=100,
+        page_width_tenths=page_width_tenths,
     )

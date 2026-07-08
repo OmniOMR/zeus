@@ -67,6 +67,8 @@ def convert_musicorpus_to_zeus(
                     re_crop=re_crop,
                     normalize_image_height=normalize_image_height,
                 )
+            except KeyboardInterrupt:
+                raise
             except:
                 # skip the sample on error
                 logging.exception(f"Error converting sample {mc_sample.get_zeus_sample_name()}:")

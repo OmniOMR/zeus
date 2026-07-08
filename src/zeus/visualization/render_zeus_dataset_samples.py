@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..data.SamplesFile import SamplesFile
+from ..data.SamplesFile import SamplesFile, Sample
 import tqdm
 from lmx.musescore.MuseScore import MuseScore
 from lmx.musescore.render_staff import render_staff
@@ -13,9 +13,13 @@ def render_zeus_dataset_samples(
         samples_path: Path,
         image_suffix: str,
         render_invisible: bool,
-        batch_size: int
+        batch_size: int,
+        page_width_tenths: int,
 ):
     samples = SamplesFile.load(samples_path)
+
+    # samples that were not rendered
+    failed_samples: list[Sample] = []
 
     # group into batches
     sample_batches = [
@@ -34,13 +38,26 @@ def render_zeus_dataset_samples(
                 .with_suffix(".png")
             for sample in batch
         ]
+        overflown_sample_indices: list[int] = []
         render_staff(
             ms=ms,
             part_element=part_elements,
             output_png_file=output_png_files,
             render_invisible_attributes=render_invisible,
-            page_width_tenths=6_000,
+            page_width_tenths=page_width_tenths,
+            on_page_overflow="return-index",
+            overflown_sample_indices=overflown_sample_indices,
         )
+        for i in overflown_sample_indices:
+            failed_samples.append(batch[i])
+    
+    if len(failed_samples) > 0:
+        print()
+        print("Not all samples were rendered, due to page overflow issues.")
+        print("These are the failed samples:")
+        print("---------------------------------")
+        for sample in failed_samples:
+            print(sample.name)
 
 
 def _load_part_from_file(file_path: Path) -> ET.Element:
