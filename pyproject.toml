@@ -18,7 +18,7 @@ dependencies = [
     "tensorflow~=2.12.0",
     "pyyaml",
     "tqdm",
-    "linearized-musicxml @ git+https://github.com/OMR-Research/lmx.git@6110623ff436a991b89ac1227efff2d4a473202a",
+    "linearized-musicxml @ git+https://github.com/OMR-Research/lmx.git@87fca1c38bda83bc032596ab00af28412f92941d",
     "levenshtein"
 ]
 description = "Image-to-sequence model Optical Music Recognition"

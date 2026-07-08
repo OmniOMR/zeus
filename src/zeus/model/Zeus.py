@@ -253,7 +253,7 @@ class Zeus:
                     batch_annotations[i].numpy()
                 )
                 html += "<div>"
-                html += f'<img src="images/{sample_index}.png">'
+                html += f'<img src="images/{sample_index}.png" style="max-width: 1200px;">'
                 html += f'<p>LMX: <code>{lmx}</code></p>'
                 html += "</div>"
                 
