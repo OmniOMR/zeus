@@ -130,6 +130,8 @@ zeus pickle datasets/dolores/samples.all.txt
 
 The command will create the `.pickle` file next to the samples file.
 
+When pickling a dataset, by default, the command checks that each sample has both the image and the LMX annotation. If not, it raises an error. If instead you want to skip samples that have missing images, use the `--benevolent` flag.
+
 
 ## Image suffixes
 

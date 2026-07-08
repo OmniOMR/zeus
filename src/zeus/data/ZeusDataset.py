@@ -26,7 +26,8 @@ class ZeusDataset:
         samples_file_path: Path,
         image_suffix: str,
         with_musicxml: bool,
-        show_progress_bar: bool = False
+        show_progress_bar: bool = False,
+        benevolent: bool = False,
     ) -> "ZeusDataset":
         """
         Loads a Zeus dataset from its folder-representation,
@@ -39,6 +40,7 @@ class ZeusDataset:
             e.g. camera grandstaff LMX dataset.
         :param with_musicxml: Whether to load MusicXML files as well or not.
         :param show_progress_bar: Whether to show a tqdm progress bar while loading.
+        :param benevolent: Skip samples with missing images without raising.
         """
         zeus_dataset_samples: list[ZeusDatasetSample] = []
         
@@ -56,8 +58,13 @@ class ZeusDataset:
                         image = image_path.read_bytes()
                         break
                 if image is None:
-                    print("Couldn't find image for sample", sample.name)
-                    exit(4)
+                    if benevolent:
+                        pbar.update(1)
+                        continue
+                    raise RuntimeError(
+                        f"Sample is missing an image file: {sample.name}\n" +
+                        "Set the 'benevolent' flag if such samples should be ignored."
+                    )
 
                 # load lmx
                 lmx = sample.path.with_suffix(".lmx") \

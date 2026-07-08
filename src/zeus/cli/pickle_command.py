@@ -24,12 +24,20 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Include MusicXML data in the pickle, only needed " +
         "for TEDn evaluation."
     )
+    parser.add_argument(
+        "--benevolent",
+        default=False,
+        action="store_true",
+        help="Ignore samples with missing images. The pickle file may have " +
+            "fewer samples than what is defined in the input samples.txt file."
+    )
 
 
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     samples_path = Path(args.samples_file_path)
     image_suffix = str(args.image_suffix)
     with_musicxml = bool(args.with_musicxml)
+    benevolent = bool(args.benevolent)
     
     if not samples_path.exists():
         print("There is no file at", samples_path)
@@ -40,6 +48,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         image_suffix=image_suffix,
         with_musicxml=with_musicxml,
         show_progress_bar=True,
+        benevolent=benevolent,
     )
     
     pickle_path = create_pickle_path_from_samples_path(
