@@ -24,7 +24,7 @@ def extract_samples_for_page(
         raise Exception(f"There is no folder at path {page_path}")
 
     # iterate staves
-    if take_staves:
+    if take_staves and (page_path / "Staves").is_dir():
         for staff_path in (page_path / "Staves").iterdir():
             if (staff_path / "transcription.musicxml").exists():
                 yield MusicorpusSample(
@@ -34,7 +34,7 @@ def extract_samples_for_page(
                 )
 
     # iterate grandstaves
-    if take_grandstaves:
+    if take_grandstaves and (page_path / "Grandstaves").is_dir():
         for grandstaff_path in (page_path / "Grandstaves").iterdir():
             if (grandstaff_path / "transcription.musicxml").exists():
                 yield MusicorpusSample(
