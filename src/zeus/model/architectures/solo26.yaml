@@ -1,0 +1,10 @@
+name: "solo26"
+height: 128 # just smaller image height compared to grand24
+cnn_dim: 32
+cnn_resblocks: 2
+cnn_stages: 4
+rnn_dim: 192
+rnn_layers: 2
+rnn_layers_decoder: 1
+timestep_width: 16
+dropout: 0.2

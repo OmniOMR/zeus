@@ -48,8 +48,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             predictions_lmx.append(line.strip())
 
     # new dummy model to run the visualization with
+    # TODO: visualization should be extracted out from the Zeus class
     zeus = Zeus(
-        architecture_options=ArchitectureOptions(),
+        architecture_options=ArchitectureOptions.from_well_known("grand24"),
         token_map=TokenMap.create_from_dataset(dataset.samples)
     )
 

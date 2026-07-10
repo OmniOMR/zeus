@@ -2,6 +2,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 import json
 import yaml
+from typing import Any
 
 
 @dataclass
@@ -12,32 +13,46 @@ class ArchitectureOptions:
     and layer counts.
     """
 
-    height: int = 192
+    name: str
+    """Human-readable name of the architecture, e.g. 'grand24'"""
+
+    height: int
     """Image height."""
     
-    cnn_dim: int = 32
+    cnn_dim: int
     """CNN dim at original resolution."""
 
-    cnn_resblocks: int = 2
+    cnn_resblocks: int
     """CNN ResNet blocks per layer."""
 
-    cnn_stages: int = 4
+    cnn_stages: int
     """CNN layers."""
 
-    rnn_dim: int = 192
+    rnn_dim: int
     """RNN dimension."""
 
-    rnn_layers: int = 2
+    rnn_layers: int
     """RNN layers."""
 
-    rnn_layers_decoder: int = 1
+    rnn_layers_decoder: int
     """RNN decoder layers."""
 
-    timestep_width: int = 16
+    timestep_width: int
     """Timestep width."""
 
-    dropout: float = 0.2
+    dropout: float
     """What dropout rate should be used during model training"""
+
+    @staticmethod
+    def from_well_known(architecture_name: str) -> "ArchitectureOptions":
+        archs_path = Path(__file__).parent / "architectures"
+
+        if architecture_name == "grand24":
+            return ArchitectureOptions.from_yaml(archs_path / "grand24.yaml")
+        elif architecture_name == "solo26":
+            return ArchitectureOptions.from_yaml(archs_path / "solo26.yaml")
+
+        raise ValueError("Unknown model architecture: " + architecture_name)
 
     @staticmethod
     def from_model_folder(model_folder_path: Path) -> "ArchitectureOptions":
@@ -81,8 +96,9 @@ class ArchitectureOptions:
         the old zeus models use. The old JSON file is just a dump of
         the argparse namespace values.
         """
-        options = json.loads(json_file_path.read_text())
+        options: dict[str, Any] = json.loads(json_file_path.read_text())
         return ArchitectureOptions(
+            name=str(options.get("name", "")), # optional, because introduced later
             height=int(options["height"]),
             cnn_dim=int(options["cnn_dim"]),
             cnn_resblocks=int(options["cnn_resblocks"]),

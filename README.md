@@ -29,7 +29,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
 - Model architecture
 - Model snapshots
-- Training Zeus
+- [Training Zeus](docs/training-zeus.md)
 - Training on the UFAL LRC cluster
 - ...
 - TODO: Prediction, streaming

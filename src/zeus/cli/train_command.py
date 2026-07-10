@@ -25,6 +25,14 @@ def define_parser(parser: argparse.ArgumentParser):
             "training a new one, e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'"
     )
     parser.add_argument(
+        "--new_model",
+        default=None,
+        type=str,
+        help="When training a new model, this argument specifies its " +
+            "architecture. Use 'grand24' for the grand staff model from 2024 " +
+            "and 'solo26' for the solo-staff model from 2026."
+    )
+    parser.add_argument(
         "--train",
         required=True,
         type=str,
@@ -123,6 +131,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # prepare CLI arguments
     experiment = str(args.experiment)
     model_path: Path | None = Path(args.model) if args.model else None
+    new_model: str | None = str(args.new_model) if args.new_model else None
     train_pickle_paths = [Path(p) for p in args.train]
     augmentations = str(args.augment)
     dev_pickle_paths = [Path(p) for p in args.dev]
@@ -135,6 +144,12 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     lr_decay = str(args.lr_decay)
     seed = int(args.seed)
     threads = int(args.threads)
+
+    # either load or create a model
+    if new_model is None and model_path is None:
+        print("Specify either the --model or --new_model arguments,")
+        print("i.e, you must either load a model or train a new one.")
+        exit(1)
 
     # create the logdir
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
@@ -178,8 +193,10 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # create new or load an existing model
     if model_path is None:
+        assert new_model is not None
+        architecture_options = ArchitectureOptions.from_well_known(new_model)
         zeus = Zeus(
-            architecture_options=ArchitectureOptions(),
+            architecture_options=architecture_options,
             token_map=TokenMap.create_from_dataset(train_dataset.samples)
         )
     else:
