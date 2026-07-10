@@ -87,4 +87,11 @@ The `--quiet_tf` argument disabled Tensorflow warnings and verbose logs. You can
 
 ## Output files
 
-`logs/{experiment-name}` TODO ...
+When you run training, it creates a folder `logs/{experiment-name}-{timestamp}` wich contains all the logs and results from the training process.
+
+- `train/` Tensorboard events are logged into this folder
+- `snapshots/` Contains one model snapshot for each evaluated epoch
+- `evaluation/` Contains evaluation results for all evaluated epoch and the final epoch.
+    - `e5-{eval_dataset_name}.yaml` evaluation metrics for a dataset at epoch 5
+    - `e5-{eval_dataset_name}.lmx` evaluation predictions for a dataset at epoch 5 (one sample on one line)
+- `training_options.yaml` The training options used for the training process.

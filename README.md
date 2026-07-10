@@ -17,7 +17,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - `zeus` **`musicorpus`** [`--help`](docs/converting-musicorpus-datasets-to-zeus-format.md): Converts a [MusiCorpus](https://github.com/OmniOMR/musicorpus) dataset to Zeus dataset.
 - `zeus` **`render`** [`--help`](docs/zeus-dataset-format-and-pickling.md#rendering-musicxml-samples): Renders one Zeus dataset split via MuseScore to B/W images. Uses MusicXML files as input.
 - `zeus` **`pickle`** [`--help`](docs/zeus-dataset-format-and-pickling.md#pickling): Bundles one Zeus dataset split into a pickle file for faster loading on the compute cluster.
-- `zeus` **`train`** `--help`: Trains a Zeus model, both new or loaded.
+- `zeus` **`train`** [`--help`](docs/training-zeus.md): Trains a Zeus model, both new or loaded.
 - `zeus` **`evaluate`** `--help`: Performs symbol error rate evaluation on LMX against the given dataset split.
 - `zeus` **`predict`** `--help`: TODO
 
@@ -27,10 +27,12 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
 - [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
 - [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
-- Model architecture
-- Model snapshots
+- [Model architecture](docs/model-architecture.md)
+- [Model snapshots](docs/model-snapshots.md)
 - [Training Zeus](docs/training-zeus.md)
 - Training on the UFAL LRC cluster
+- Visualizing training data
+- Visualizing model predictions
 - ...
 - TODO: Prediction, streaming
 - TODO: Python API
