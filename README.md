@@ -58,7 +58,7 @@ In other words, if you can't afford to have your project on Python 3.10, you mus
 This is the command to install Zeus from this github repository at the latest commit:
 
 ```bash
-pip install zeus @ git+https://github.com/OmniOMR/zeus.git@main
+pip install 'zeus @ git+https://github.com/OmniOMR/zeus.git@main'
 ```
 
 Learn more about [VCS support](https://pip.pypa.io/en/stable/topics/vcs-support/) of `pip`.
