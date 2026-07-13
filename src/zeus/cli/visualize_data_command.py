@@ -13,6 +13,14 @@ def define_parser(parser: argparse.ArgumentParser):
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 
     parser.add_argument(
+        "--new_model",
+        required=True,
+        type=str,
+        help="When training a new model, this argument specifies its " +
+            "architecture. Use 'grand24' for the grand staff model from 2024 " +
+            "and 'solo26' for the solo-staff model from 2026."
+    )
+    parser.add_argument(
         "--train",
         required=True,
         type=str,
@@ -53,6 +61,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     from ..model.Zeus import Zeus
 
     # prepare CLI arguments
+    new_model: str | None = str(args.new_model) if args.new_model else None
     train_pickle_paths = [Path(p) for p in args.train]
     augmentations = str(args.augment)
     batch_size = int(args.batch_size)
@@ -77,7 +86,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # new dummy model to run the visualization with
     # TODO: visualization should be extracted out from the Zeus class
     zeus = Zeus(
-        architecture_options=ArchitectureOptions.from_well_known("grand24"),
+        architecture_options=ArchitectureOptions.from_well_known(new_model),
         token_map=TokenMap.create_from_dataset(train_dataset.samples)
     )
 

@@ -162,6 +162,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     tf.config.threading.set_intra_op_parallelism_threads(threads)
 
     # load training datasets
+    print("Loading train datasets...")
     train_datasets = [
         ZeusDataset.load_from_pickle_file(path)
         for path in train_pickle_paths
@@ -178,6 +179,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     )
 
     # load validation datasets
+    print("Loading dev datasets...")
     dev_datasets = [
         ZeusDataset.load_from_pickle_file(path)
         for path in dev_pickle_paths
@@ -185,11 +187,15 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     for d in dev_datasets: d.print_statistics()
 
     # load test datasets
+    print("Loading test datasets...")
     test_datasets = [
         ZeusDataset.load_from_pickle_file(path)
         for path in test_pickle_paths
     ]
     for d in test_datasets: d.print_statistics()
+
+    print("Done loading datasets.")
+    print("")
 
     # create new or load an existing model
     if model_path is None:

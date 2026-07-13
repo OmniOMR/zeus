@@ -253,7 +253,7 @@ class Zeus:
                     batch_annotations[i].numpy()
                 )
                 html += "<div>"
-                html += f'<img src="images/{sample_index}.png" style="max-width: 1200px;">'
+                html += f'<img src="images/{sample_index}.png" heigt="{self.architecture_options.height}">'
                 html += f'<p>LMX: <code>{lmx}</code></p>'
                 html += "</div>"
                 
@@ -332,7 +332,7 @@ class Zeus:
                 image
             )
             html += "<div>"
-            html += f'<img src="{images_folder_path.name}/{sample_index}.jpg" height="192">'
+            html += f'<img src="{images_folder_path.name}/{sample_index}.jpg" heigt="{self.architecture_options.height}">'
             html += f'<p>SER: <strong>{ser:.2f}</strong></p>'
             html += f'<p>Gold LMX: <code>{gold_lmx}</code></p>'
             html += f'<p>Predicted LMX: <code>{pred_lmx}</code></p>'

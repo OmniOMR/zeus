@@ -40,10 +40,12 @@ class TrainingOptions:
     """Maximum length of a training sequence. Used to determine the size of
     tensors to allocate for the ragged sequences."""
 
-    max_image_width: int | None = None
+    max_image_width: int | None = 1500
     """
     Maximum image width to feed into the model, None means unlimited.
     Larger images are scaled-down to fit into this limit.
+    Defaults to 1500px, which is wider than most OmniOMR and olimpic samples
+    when height-normalized.
     """
 
     seed: int = 42

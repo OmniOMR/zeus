@@ -17,8 +17,10 @@ class InferenceOptions:
     max_prediction_length: int = 700
     """Maximum length of a predicted sequence"""
 
-    max_image_width: int | None = None
+    max_image_width: int | None = 1500
     """
     Maximum image width to feed into the model, None means unlimited.
     Larger images are scaled-down to fit into this limit.
+    Defaults to 1500px, which is wider than most OmniOMR and olimpic samples
+    when height-normalized.
     """

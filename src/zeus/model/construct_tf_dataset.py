@@ -6,7 +6,6 @@ from .TokenMap import TokenMap
 from typing import Iterable
 from .TrainingOptions import TrainingOptions
 from .InferenceOptions import InferenceOptions
-from ..data.ZeusDataset import ZeusDataset
 from ..data.ShuffledView import ShuffledView
 
 
