@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from ..model.InferenceOptions import InferenceOptions
+from ..model.inference_options import InferenceOptions
 from datetime import datetime
 
 
@@ -37,8 +37,8 @@ def define_parser(parser: argparse.ArgumentParser):
 
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # deffered imports as they import tensorflow which is slow
-    from ..model.Zeus import Zeus
-    from ..data.ZeusDataset import ZeusDataset
+    from ..model.zeus import Zeus
+    from ..data.zeus_dataset import ZeusDataset
 
     # prepare CLI arguments
     model_folder_path = Path(args.model)

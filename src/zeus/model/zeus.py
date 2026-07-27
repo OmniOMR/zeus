@@ -1,15 +1,15 @@
-from .ArchitectureOptions import ArchitectureOptions
+from .architecture_options import ArchitectureOptions
 from pathlib import Path
 import random
 import shutil
 import tensorflow as tf
 import contextlib
-from .KerasModel import KerasModel
-from .TokenMap import TokenMap
-from ..data.ZeusDataset import ZeusDataset
-from ..data.ShuffledView import ShuffledView
-from .TrainingOptions import TrainingOptions
-from .InferenceOptions import InferenceOptions
+from .keras_model import KerasModel
+from .token_map import TokenMap
+from ..data.zeus_dataset import ZeusDataset
+from ..data.shuffled_view import ShuffledView
+from .training_options import TrainingOptions
+from .inference_options import InferenceOptions
 from .construct_tf_dataset import construct_tf_dataset
 from ..evaluation.ser_metric import ser_metric
 

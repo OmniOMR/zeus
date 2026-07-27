@@ -1,5 +1,5 @@
 from pathlib import Path, PosixPath
-from .MusicorpusSample import MusicorpusSample
+from .musicorpus_sample import MusicorpusSample
 
 
 def convert_image(

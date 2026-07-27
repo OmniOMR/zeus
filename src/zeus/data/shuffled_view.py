@@ -1,5 +1,4 @@
-from .ZeusDataset import ZeusDataset
-from .ZeusDatasetSample import ZeusDatasetSample
+from .zeus_dataset import ZeusDataset, ZeusDatasetSample
 import random
 from typing import Iterable
 

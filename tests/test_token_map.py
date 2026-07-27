@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from zeus.model.TokenMap import TokenMap
+from zeus.model.token_map import TokenMap
 
 
 def a_token_map() -> TokenMap:

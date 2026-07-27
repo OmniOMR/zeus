@@ -1,10 +1,10 @@
 import argparse
 from pathlib import Path
-from ..model.ArchitectureOptions import ArchitectureOptions
-from ..model.TrainingOptions import TrainingOptions
-from ..model.InferenceOptions import InferenceOptions
-from ..model.TokenMap import TokenMap
-from ..data.ShuffledView import ShuffledView
+from ..model.architecture_options import ArchitectureOptions
+from ..model.training_options import TrainingOptions
+from ..model.inference_options import InferenceOptions
+from ..model.token_map import TokenMap
+from ..data.shuffled_view import ShuffledView
 from datetime import datetime
 import os
 
@@ -124,8 +124,8 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
     
     # deffered imports as they import tensorflow which is slow
-    from ..data.ZeusDataset import ZeusDataset
-    from ..model.Zeus import Zeus
+    from ..data.zeus_dataset import ZeusDataset
+    from ..model.zeus import Zeus
     import tensorflow as tf
 
     # prepare CLI arguments

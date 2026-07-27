@@ -1,7 +1,7 @@
 from pathlib import Path
 from .extract_samples_for_page import extract_samples_for_page
 import json
-from ..data.SamplesFile import SamplesFile
+from ..data.samples_file import SamplesFile
 import tqdm
 from .convert_musicxml import convert_musicxml
 from .convert_image import convert_image

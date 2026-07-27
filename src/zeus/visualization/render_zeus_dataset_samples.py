@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..data.SamplesFile import SamplesFile, Sample
+from ..data.samples_file import SamplesFile, Sample
 import tqdm
 from lmx.musescore.MuseScore import MuseScore
 from lmx.musescore.render_staff import render_staff

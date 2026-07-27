@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from ..data.ZeusDataset import ZeusDataset
+from ..data.zeus_dataset import ZeusDataset
 
 
 def define_parser(parser: argparse.ArgumentParser):

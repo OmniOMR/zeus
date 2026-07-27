@@ -1,9 +1,9 @@
 import tensorflow as tf
-from .RNNCellsWithAttention import RNNCellsWithAttention
-from .ArchitectureOptions import ArchitectureOptions
-from .TokenMap import TokenMap
-from .TrainingOptions import TrainingOptions
-from .InferenceOptions import InferenceOptions
+from .rnn_cells_with_attention import RNNCellsWithAttention
+from .architecture_options import ArchitectureOptions
+from .token_map import TokenMap
+from .training_options import TrainingOptions
+from .inference_options import InferenceOptions
 
 
 class KerasModel(tf.keras.Model):

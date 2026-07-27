@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Iterable
-from .MusicorpusSample import MusicorpusSample
+from .musicorpus_sample import MusicorpusSample
 
 
 def extract_samples_for_page(

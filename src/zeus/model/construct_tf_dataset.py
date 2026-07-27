@@ -1,12 +1,12 @@
 import tensorflow as tf
 import re
 import numpy as np
-from .ArchitectureOptions import ArchitectureOptions
-from .TokenMap import TokenMap
+from .architecture_options import ArchitectureOptions
+from .token_map import TokenMap
 from typing import Iterable
-from .TrainingOptions import TrainingOptions
-from .InferenceOptions import InferenceOptions
-from ..data.ShuffledView import ShuffledView
+from .training_options import TrainingOptions
+from .inference_options import InferenceOptions
+from ..data.shuffled_view import ShuffledView
 
 
 def construct_tf_dataset(

@@ -1,5 +1,5 @@
 from pathlib import Path, PosixPath
-from .MusicorpusSample import MusicorpusSample
+from .musicorpus_sample import MusicorpusSample
 from lmx.tokenization.Encoder import Encoder
 from lmx.musicxml.io.read_musicxml_tree_from_file \
     import read_musicxml_tree_from_file

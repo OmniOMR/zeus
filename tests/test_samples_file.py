@@ -7,7 +7,7 @@ lets a dataset folder be moved without rewriting its index.
 
 from pathlib import Path
 
-from zeus.data.SamplesFile import SamplesFile
+from zeus.data.samples_file import SamplesFile
 
 
 def test_a_samples_file_survives_a_trip_through_the_disk(tmp_path: Path) -> None:

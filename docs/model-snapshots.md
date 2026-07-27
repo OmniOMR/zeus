@@ -4,7 +4,7 @@ Zeus model may be stored to file system, which is called a snapshot. A snapshot 
 
 The snapshot folder contains the following files:
 
-- `architecture_options.yaml` Architecture configuration values, see the `ArchitectureOptions` file (number of layers, dimensions, etc.).
+- `architecture_options.yaml` Architecture configuration values, see the `ArchitectureOptions` class (number of layers, dimensions, etc.).
 - `token_map.txt` A map between string token names and token indices used in the model's embedding layer. Line number is the index and its content is the token name.
 - `weights.h5` weights of the tensorflow model.
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..data.ZeusDatasetSample import ZeusDatasetSample
+from ..data.zeus_dataset import ZeusDatasetSample
 
 
 class TokenMap:
