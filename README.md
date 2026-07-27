@@ -30,12 +30,12 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - [Model architecture](docs/model-architecture.md)
 - [Model snapshots](docs/model-snapshots.md)
 - [Training Zeus](docs/training-zeus.md)
+- [Python API](docs/python-api.md)
 - Training on the UFAL LRC cluster
 - Visualizing training data
 - Visualizing model predictions
 - ...
 - TODO: Prediction, streaming
-- TODO: Python API
 
 
 ## Existing snapshots
@@ -53,7 +53,11 @@ You have two ways how to use Zeus for your project:
 1. Use just the CLI - install Python 3.10, setup a venv and install this package into it
 2. Use the Python API - your project already runs Python 3.10, simply install this package
 
-In other words, if you can't afford to have your project on Python 3.10, you must use Zeus via its CLI. Otherwise you can also use its Python API.
+In other words, if you can't afford to have your project on Python 3.10, you must use Zeus via its CLI. Otherwise you can also use its [Python API](docs/python-api.md), whose whole surface is importable from the package root:
+
+```py
+from zeus import Zeus, InferenceOptions
+```
 
 This is the command to install Zeus from this github repository at the latest commit:
 
