@@ -130,4 +130,49 @@ See [Training Zeus](training-zeus.md) for what the options mean and what lands i
 
 ## Inference on images
 
-Not yet — `Zeus.predict` currently raises `NotImplementedError`. This section will describe it once it exists.
+`evaluate` needs a dataset, and a dataset needs gold LMX for every sample — reasonable when measuring a model, impossible when merely running one. `predict` takes encoded images and nothing else:
+
+```py
+from pathlib import Path
+
+from zeus import InferenceOptions, Zeus
+from zeus.musicxml.lmx_to_musicxml import lmx_to_musicxml
+
+model = Zeus.load(Path("models/solo26.model"))
+
+images = [path.read_bytes() for path in Path("staves").glob("*.jpg")]
+predictions = model.predict(images, InferenceOptions(batch_size=16))
+
+for lmx in predictions:
+    print(lmx_to_musicxml(lmx))
+```
+
+Pass every image you have in one call rather than looping: a batch fills a single forward pass, and that is most of what makes inference fast. `predictions[i]` corresponds to `images[i]`.
+
+Each image should be a single staff or grandstaff. Zeus reads one system at a time, and handed a whole page it will transcribe the page as though it were one staff.
+
+
+### From LMX to MusicXML
+
+The model predicts LMX, because that is what an image-to-sequence model can emit. `lmx_to_musicxml` is the last step:
+
+```py
+from zeus.musicxml.lmx_to_musicxml import LmxDecodingError, lmx_to_musicxml
+
+try:
+    musicxml = lmx_to_musicxml(lmx)
+except LmxDecodingError as error:
+    print("this staff could not be read:", error)
+```
+
+Catching that is worth doing whenever you are transcribing more than one image. A model's output is a prediction, not a promise: nothing constrains it to be well-formed LMX, and a confused model does emit sequences the decoder cannot make sense of. `LmxDecodingError` is raised for all of them, so one unreadable staff costs that staff rather than the run.
+
+
+## Image preprocessing
+
+Every path — training, evaluation and prediction — normalizes images through one function, `zeus.model.preprocess_image`, so that a model cannot be trained on images prepared one way and then fed images prepared another.
+
+Two properties of it are worth knowing, because they shape what the model sees:
+
+- **The height is exact.** Images are scaled to `architecture_options.height` — 96 for `solo26`, 192 for `grand24` — and never to anything else. The encoder declares that height statically.
+- **The width is capped, by squashing.** Past `InferenceOptions.max_image_width` (1500 by default) the image is compressed horizontally rather than scaled down as a whole. Aspect ratio, exact height and a bounded width cannot all three hold, and aspect ratio is the one to give up: vertical resolution is where pitch lives, while horizontal compression only crowds the notes together. Set `max_image_width=None` to lift the cap and let wide staves be as wide as they are.

@@ -7,6 +7,7 @@ import tensorflow as tf
 from ..data.shuffled_view import ShuffledView
 from .architecture_options import ArchitectureOptions
 from .inference_options import InferenceOptions
+from .preprocess_image import preprocess_image
 from .token_map import TokenMap
 from .training_options import TrainingOptions
 
@@ -78,32 +79,11 @@ def construct_tf_dataset(
         image_bytes: bytes, token_indexes: np.ndarray
     ) -> tuple[tf.Tensor, np.ndarray]:
         nonlocal architecture_options, transformations, max_image_width
-        # The decoded tensor gets a name of its own rather than being written
-        # back over the parameter, which is bytes and stays bytes.
-        image = tf.image.convert_image_dtype(
-            tf.image.decode_image(image_bytes, channels=1, expand_animations=False), tf.float32
-        )
-        for transformation, *parameters in (part.split(":") for part in transformations):
-            if transformation == "threshold":
-                # Parsed into new names rather than over the originals, so that
-                # `lower` and `upper` are floats throughout instead of starting
-                # life as the strings they were spelled with.
-                lower_text, upper_text, *rest = parameters
-                lower, upper = float(lower_text), float(upper_text)
-                smooth = rest.count("smooth")
-                if not smooth:
-                    image = tf.cast(image >= lower, tf.float32) * tf.cast(
-                        image <= upper, tf.float32
-                    ) * image + tf.cast(image > upper, tf.float32)
-                else:
-                    image = tf.clip_by_value((image - lower) / (upper - lower), 0.0, 1.0)
-            elif transformation:
-                raise ValueError(f"The transformation '{transformation}' is unknown.")
-        image = tf.image.resize(
-            image,
-            size=[architecture_options.height, max_image_width or tf.int32.max],
-            preserve_aspect_ratio=True,
-            antialias=True,
+        image = preprocess_image(
+            image_bytes,
+            height=architecture_options.height,
+            transformations=transformations,
+            max_image_width=max_image_width,
         )
         return image, token_indexes
 
@@ -198,6 +178,48 @@ def construct_tf_dataset(
     if is_training and augmentations:
         dataset = dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.ragged_batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    return dataset
+
+
+def construct_tf_dataset_for_images(
+    images: list[bytes],
+    architecture_options: ArchitectureOptions,
+    inference_options: InferenceOptions,
+) -> tf.data.Dataset:
+    """Returns a tf.data.Dataset of images alone, for prediction.
+
+    The dataset above needs a `ZeusDataset`, and so needs gold LMX for every
+    sample — reasonable when measuring a model, and impossible when merely
+    running one. This takes encoded images and nothing else.
+
+    Order is preserved, and no shuffling or augmentation happens: the caller
+    matches the nth prediction to the nth image.
+
+    :param images: Encoded image files, PNG or JPEG, one per sample.
+    :param architecture_options: Used to get the desired image height.
+    :param inference_options: Batch size, transformations and width limit.
+    """
+
+    def generator() -> Iterable[bytes]:
+        yield from images
+
+    def prepare_example(image_bytes: bytes) -> tf.Tensor:
+        return preprocess_image(
+            image_bytes,
+            height=architecture_options.height,
+            transformations=inference_options.transformations,
+            max_image_width=inference_options.max_image_width,
+        )
+
+    dataset = tf.data.Dataset.from_generator(
+        generator,
+        output_signature=tf.TensorSpec(shape=(), dtype=tf.string),
+    )
+    dataset = dataset.apply(tf.data.experimental.assert_cardinality(len(images)))
+    dataset = dataset.map(prepare_example, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.ragged_batch(inference_options.batch_size)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     return dataset

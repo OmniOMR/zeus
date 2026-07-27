@@ -26,9 +26,13 @@ class RNNCellsWithAttention(tf.keras.layers.AbstractRNNCell):
         weights = tf.nn.softmax(self._output_layer(tf.tanh(projected)), axis=1)
         attention = tf.reduce_sum(self._encoded * weights, axis=1)
         inputs, new_states = tf.concat([inputs, attention], axis=1), []
-        # Keras builds `states` from `state_size`, which is one entry per cell,
-        # so the two are the same length by construction — `strict` says so.
-        for i, (cell, state) in enumerate(zip(self._cells, states, strict=True)):
+        # `strict=True` belongs here — Keras builds `states` from `state_size`,
+        # one entry per cell — but it cannot be used. This method is traced by
+        # autograph, which rewrites `zip` into its own `zip_()`, and that does
+        # not accept the argument: adding it raises `zip_() got an unexpected
+        # keyword argument 'strict'` from inside the compiled graph, breaking
+        # every prediction and every training step.
+        for i, (cell, state) in enumerate(zip(self._cells, states)):  # noqa: B905
             outputs, new_state = cell(inputs, state)
             inputs = outputs if i == 0 else inputs + outputs
             new_states.append(new_state)

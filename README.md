@@ -21,7 +21,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - `zeus` **`evaluate`** `--help`: Performs symbol error rate evaluation on LMX against the given dataset split.
 - `zeus` **`visualize-data`** `--help`: Renders training data, as the model sees it, into a browsable HTML page.
 - `zeus` **`visualize-predictions`** `--help`: Renders the output of `evaluate` beside its gold data, ordered by symbol error rate.
-- `zeus` **`predict`** `--help`: TODO
+- `zeus` **`predict`** `--help`: Reads music notation off staff images and writes MusicXML transcriptions.
 
 
 ## Documentation

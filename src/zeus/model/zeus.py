@@ -9,7 +9,7 @@ from ..data.shuffled_view import ShuffledView
 from ..data.zeus_dataset import ZeusDataset
 from ..evaluation.ser_metric import ser_metric
 from .architecture_options import ArchitectureOptions
-from .construct_tf_dataset import construct_tf_dataset
+from .construct_tf_dataset import construct_tf_dataset, construct_tf_dataset_for_images
 from .inference_options import InferenceOptions
 from .keras_model import KerasModel
 from .token_map import TokenMap
@@ -42,6 +42,29 @@ class Zeus:
         self.model: KerasModel = model
         """The Keras model containing all the low-level tensorflow stuff"""
 
+    def materialize_weights(self):
+        """Run one dummy inference, so that every layer's weights exist.
+
+        Keras builds a layer's weights lazily, on its first call. The encoder is
+        a functional model and so is built at construction, but the decoder's
+        embedding, RNN cells and output layer are not — until something has been
+        decoded, those weights do not exist to be saved or loaded.
+
+        Both directions need this. Loading needs somewhere to put the weights;
+        saving needs them to exist, or `save_weights` writes a file with the
+        encoder alone in it and the failure surfaces much later, as a layer
+        count mismatch, when someone tries to load it.
+        """
+        self.model.decoder_inference(
+            encoded=self.model.encoder(
+                tf.RaggedTensor.from_tensor(
+                    tf.ones([1, self.architecture_options.height, 128, 1], dtype=tf.float32),
+                    ragged_rank=2,
+                )
+            ),
+            max_length=1,
+        )
+
     @staticmethod
     def load(model_folder_path: Path) -> "Zeus":
         """Loads a model from its folder"""
@@ -49,17 +72,7 @@ class Zeus:
         token_map = TokenMap.load_from_model_folder(model_folder_path)
         zeus = Zeus(architecture_options=architecture_options, token_map=token_map)
 
-        # run one dummy decoder inference to fully build the model
-        # or something like that, so that weights can be loaded
-        zeus.model.decoder_inference(
-            encoded=zeus.model.encoder(
-                tf.RaggedTensor.from_tensor(
-                    tf.ones([1, zeus.architecture_options.height, 128, 1], dtype=tf.float32),
-                    ragged_rank=2,
-                )
-            ),
-            max_length=1,
-        )
+        zeus.materialize_weights()
 
         # keras Layer property, prevents Keras
         # from calling "build" on invocation
@@ -85,6 +98,12 @@ class Zeus:
 
         # create the target folder
         model_folder_path.mkdir(parents=True, exist_ok=True)
+
+        # A model that has been trained has run its decoder and so has all its
+        # weights already; one that has only been constructed has not, and
+        # saving it would write the encoder alone. Cheap either way, and it
+        # makes `store` then `load` a round trip from any state.
+        self.materialize_weights()
 
         # model weights
         self.model.save_weights(str(model_folder_path / "weights.h5"))
@@ -385,6 +404,56 @@ class Zeus:
 
         return (predicted_lmx_samples, computed_metrics)
 
-    def predict(self, inference_options: InferenceOptions):
-        """Run model inference on given images of music notation"""
-        raise NotImplementedError
+    def predict(
+        self,
+        images: list[bytes],
+        inference_options: InferenceOptions,
+        with_progress_bar: bool = False,
+    ) -> list[str]:
+        """Read music notation off the given images.
+
+        This is inference proper: images in, transcriptions out, with no gold
+        data anywhere. `evaluate` is the same forward pass with a dataset and a
+        score attached; this is what you want when you have a scan and a
+        question.
+
+        The images are processed in batches of `inference_options.batch_size`,
+        which is what makes this much faster than one call per image — a batch
+        fills a single forward pass.
+
+        :param images: Encoded image files, PNG or JPEG, one per staff or
+            grandstaff. Each should be a single system: Zeus reads one staff at
+            a time and will transcribe a whole page as if it were one.
+        :param inference_options: Batch size, image transformations, and the
+            limits on predicted length and image width.
+        :param with_progress_bar: Show TensorFlow's progress bar.
+        :returns: One LMX string per image, in the order the images were given.
+            Use `zeus.musicxml.lmx_to_musicxml` to turn one into MusicXML.
+        """
+        if len(images) == 0:
+            # tf.data cannot build a dataset with no elements to infer shapes
+            # from, and there is nothing to predict anyway.
+            return []
+
+        tf_dataset = construct_tf_dataset_for_images(
+            images=images,
+            architecture_options=self.architecture_options,
+            inference_options=inference_options,
+        )
+
+        self.model.prepare_for_inference(inference_options)
+        predicted_token_indexes = self.model.predict(
+            tf_dataset, verbose=1 if with_progress_bar else 0
+        )
+
+        predictions = [
+            self.token_map.indices_to_lmx(list(sample_prediction.numpy()))
+            for sample_prediction in predicted_token_indexes
+        ]
+
+        assert len(predictions) == len(images), (
+            f"The model returned {len(predictions)} predictions for {len(images)} images; "
+            "the caller matches them up by position, so this must not happen."
+        )
+
+        return predictions

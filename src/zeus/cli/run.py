@@ -18,6 +18,7 @@ from zeus.cli import (
     evaluate_command,
     musicorpus_command,
     pickle_command,
+    predict_command,
     render_command,
     train_command,
     visualize_data_command,
@@ -46,6 +47,7 @@ class Command(Protocol):
 COMMANDS: list[Command] = [
     train_command,
     evaluate_command,
+    predict_command,
     visualize_data_command,
     visualize_predictions_command,
     pickle_command,

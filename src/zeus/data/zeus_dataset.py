@@ -1,6 +1,7 @@
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import tqdm
@@ -49,6 +50,29 @@ class ZeusDatasetSample:
         assert len(self.image) > 0
         assert "\n" not in self.lmx
         assert "\r" not in self.lmx
+
+
+class _Unpickler(pickle.Unpickler):
+    """Reads dataset pickles, including ones written before the modules moved.
+
+    A pickle stores the import path of every class it contains, so renaming a
+    module invalidates every pickle that mentions it — and these hold decoded
+    images, so rebuilding one is minutes of work per dataset split, not
+    seconds. `ZeusDatasetSample` used to live in a module of its own and now
+    sits beside `ZeusDataset`, which is enough to make an existing pickle fail
+    to load with `ModuleNotFoundError`.
+
+    Redirecting the old path here keeps those files readable. Nothing writes
+    the old path any more, so this table only ever shrinks.
+    """
+
+    MOVED_MODULES = {
+        "zeus.data.ZeusDatasetSample": "zeus.data.zeus_dataset",
+        "zeus.data.ZeusDataset": "zeus.data.zeus_dataset",
+    }
+
+    def find_class(self, module: str, name: str) -> Any:
+        return super().find_class(self.MOVED_MODULES.get(module, module), name)
 
 
 class ZeusDataset:
@@ -138,7 +162,7 @@ class ZeusDataset:
     def load_from_pickle_file(pickle_path: Path) -> "ZeusDataset":
         """Loads a dataset from its pickled representation"""
         with open(str(pickle_path), "rb") as file:
-            samples = pickle.load(file)
+            samples = _Unpickler(file).load()
             assert type(samples) is list
             assert len(samples) > 0
             assert type(samples[0]) is ZeusDatasetSample
