@@ -1,10 +1,12 @@
-from .zeus_dataset import ZeusDataset, ZeusDatasetSample
 import random
-from typing import Iterable
+from collections.abc import Iterable
+
+from .zeus_dataset import ZeusDataset, ZeusDatasetSample
 
 
 class ShuffledView:
     """A shuffled view at a ZeusDataset"""
+
     def __init__(self, dataset: ZeusDataset, index_map: list[int]):
         """The shuffled view should NOT be created via constructor,
         see the provided factory methods instead."""
@@ -17,8 +19,9 @@ class ShuffledView:
         this index map is shuffled randomly to emulate the shuffling
         of the underlying dataset."""
 
-        assert len(self.dataset.samples) == len(self.index_map), \
+        assert len(self.dataset.samples) == len(self.index_map), (
             "The index map should have the same size as the dataset"
+        )
 
     @staticmethod
     def create_unshuffled_for(dataset: ZeusDataset) -> "ShuffledView":
@@ -33,12 +36,12 @@ class ShuffledView:
     def create_random_for(dataset: ZeusDataset, seed: int) -> "ShuffledView":
         """Creates a randomly shuffled view of a dataset"""
         view = ShuffledView.create_unshuffled_for(dataset)
-        
+
         # actually shuffle the view
         random.Random(seed).shuffle(view.index_map)
-        
+
         return view
-    
+
     def iter_shuffled_samples(self) -> Iterable[ZeusDatasetSample]:
         """Returns an interator that emits dataset samples in the shuffled order"""
         for i in range(len(self.dataset.samples)):

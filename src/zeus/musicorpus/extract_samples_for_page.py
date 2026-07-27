@@ -1,16 +1,17 @@
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
+
 from .musicorpus_sample import MusicorpusSample
 
 
 def extract_samples_for_page(
-        page_path: Path,
-        take_staves: bool,
-        take_grandstaves: bool,
+    page_path: Path,
+    take_staves: bool,
+    take_grandstaves: bool,
 ) -> Iterable[MusicorpusSample]:
     """
     Given a MusiCorpus page, it extracts samples defined within it.
-    
+
     Since folders may exist and be empty, we are interested in samples
     where MusicXML files are actually present. The presence of the image
     file will be checked later since it depends on whether re-cropping occurs.

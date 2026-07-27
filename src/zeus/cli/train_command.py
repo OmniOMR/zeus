@@ -1,120 +1,96 @@
 import argparse
+import os
+import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Literal, cast
+
+from ..data.shuffled_view import ShuffledView
 from ..model.architecture_options import ArchitectureOptions
-from ..model.training_options import TrainingOptions
 from ..model.inference_options import InferenceOptions
 from ..model.token_map import TokenMap
-from ..data.shuffled_view import ShuffledView
-from datetime import datetime
-import os
+from ..model.training_options import TrainingOptions
 
 
 def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "--experiment",
-        type=str,
-        required=True,
-        help="Name of the experiment, used in logs"
+        "--experiment", type=str, required=True, help="Name of the experiment, used in logs"
     )
     parser.add_argument(
         "--model",
         default=None,
         type=str,
-        help=
-            "Path to load a model from to refine instead of " +
-            "training a new one, e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'"
+        help="Path to load a model from to refine instead of "
+        + "training a new one, e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'",
     )
     parser.add_argument(
         "--new_model",
         default=None,
         type=str,
-        help="When training a new model, this argument specifies its " +
-            "architecture. Use 'grand24' for the grand staff model from 2024 " +
-            "and 'solo26' for the solo-staff model from 2026."
+        help="When training a new model, this argument specifies its "
+        + "architecture. Use 'grand24' for the grand staff model from 2024 "
+        + "and 'solo26' for the solo-staff model from 2026.",
     )
     parser.add_argument(
         "--train",
         required=True,
         type=str,
         nargs="*",
-        help="Path to the dataset pickle used for training"
+        help="Path to the dataset pickle used for training",
     )
     parser.add_argument(
         "--augment",
         default="h:8",
         type=str,
-        help="Data augmentation instructions, defaults to 'h:8'"
+        help="Data augmentation instructions, defaults to 'h:8'",
     )
     parser.add_argument(
         "--dev",
         type=str,
         default=[],
         nargs="*",
-        help="Paths to dataset pickles used for validation"
+        help="Paths to dataset pickles used for validation",
     )
     parser.add_argument(
-        "--test",
-        type=str,
-        default=[],
-        nargs="*",
-        help="Paths to dataset pickles used for testing"
+        "--test", type=str, default=[], nargs="*", help="Paths to dataset pickles used for testing"
     )
     parser.add_argument(
         "--epochs",
         type=int,
         required=True,
-        help="How many epochs on the training dataset to train for"
+        help="How many epochs on the training dataset to train for",
     )
     parser.add_argument(
-        "--evaluation_from",
-        type=int,
-        default=1,
-        help="Start evaluation with this epoch onward"
+        "--evaluation_from", type=int, default=1, help="Start evaluation with this epoch onward"
     )
     parser.add_argument(
-        "--evaluation_each",
-        type=int,
-        default=1,
-        help="Run evaluation each this number of epochs"
+        "--evaluation_each", type=int, default=1, help="Run evaluation each this number of epochs"
     )
     parser.add_argument(
-        "--batch_size",
-        default=64,
-        type=int,
-        help="Number of samples per batch when doing training"
+        "--batch_size", default=64, type=int, help="Number of samples per batch when doing training"
     )
     parser.add_argument(
-        "--learning_rate",
-        default=1e-3,
-        type=float,
-        help="Initial learning rate, defaults to 1e-3"
+        "--learning_rate", default=1e-3, type=float, help="Initial learning rate, defaults to 1e-3"
     )
     parser.add_argument(
         "--lr_decay",
         default="cos",
         choices=["none", "cos"],
-        help="Type of learning rate decay, defaults to none"
+        help="Type of learning rate decay, defaults to none",
     )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="RNG seed"
-    )
+    parser.add_argument("--seed", type=int, default=42, help="RNG seed")
     parser.add_argument(
         "--threads",
         default=0,
         type=int,
-        help="Maximum number of threads to use, 0 meaning " +
-            "automatic setting (default)"
+        help="Maximum number of threads to use, 0 meaning " + "automatic setting (default)",
     )
     parser.add_argument(
         "--quiet_tf",
         default=False,
         action="store_true",
-        help=
-            "Set Tensorflow logging to level 2 " +
-            "(hides debugging messages, reports only errors)"
+        help="Set Tensorflow logging to level 2 "
+        + "(hides debugging messages, reports only errors)",
     )
 
 
@@ -122,11 +98,12 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # Report only TF errors
     if args.quiet_tf:
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
-    
+
     # deffered imports as they import tensorflow which is slow
+    import tensorflow as tf
+
     from ..data.zeus_dataset import ZeusDataset
     from ..model.zeus import Zeus
-    import tensorflow as tf
 
     # prepare CLI arguments
     experiment = str(args.experiment)
@@ -141,7 +118,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     evaluation_each = int(args.evaluation_each)
     batch_size = int(args.batch_size)
     learning_rate = float(args.learning_rate)
-    lr_decay = str(args.lr_decay)
+    # The parser restricts this to the same two values the Literal names, so
+    # the cast asserts what argparse has already enforced.
+    lr_decay = cast(Literal["none", "cos"], str(args.lr_decay))
     seed = int(args.seed)
     threads = int(args.threads)
 
@@ -149,7 +128,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     if new_model is None and model_path is None:
         print("Specify either the --model or --new_model arguments,")
         print("i.e, you must either load a model or train a new one.")
-        exit(1)
+        sys.exit(1)
 
     # create the logdir
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
@@ -163,11 +142,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # load training datasets
     print("Loading train datasets...")
-    train_datasets = [
-        ZeusDataset.load_from_pickle_file(path)
-        for path in train_pickle_paths
-    ]
-    for d in train_datasets: d.print_statistics()
+    train_datasets = [ZeusDataset.load_from_pickle_file(path) for path in train_pickle_paths]
+    for d in train_datasets:
+        d.print_statistics()
     train_dataset = ZeusDataset.combine_multiple(train_datasets)
     print("Combined train dataset: ", end="")
     train_dataset.print_statistics()
@@ -180,19 +157,15 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # load validation datasets
     print("Loading dev datasets...")
-    dev_datasets = [
-        ZeusDataset.load_from_pickle_file(path)
-        for path in dev_pickle_paths
-    ]
-    for d in dev_datasets: d.print_statistics()
+    dev_datasets = [ZeusDataset.load_from_pickle_file(path) for path in dev_pickle_paths]
+    for d in dev_datasets:
+        d.print_statistics()
 
     # load test datasets
     print("Loading test datasets...")
-    test_datasets = [
-        ZeusDataset.load_from_pickle_file(path)
-        for path in test_pickle_paths
-    ]
-    for d in test_datasets: d.print_statistics()
+    test_datasets = [ZeusDataset.load_from_pickle_file(path) for path in test_pickle_paths]
+    for d in test_datasets:
+        d.print_statistics()
 
     print("Done loading datasets.")
     print("")
@@ -203,7 +176,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         architecture_options = ArchitectureOptions.from_well_known(new_model)
         zeus = Zeus(
             architecture_options=architecture_options,
-            token_map=TokenMap.create_from_dataset(train_dataset.samples)
+            token_map=TokenMap.create_from_dataset(train_dataset.samples),
         )
     else:
         zeus = Zeus.load(model_path)
@@ -228,5 +201,5 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             batch_size=batch_size,
             transformations=[],
         ),
-        logdir_path=logdir_path
+        logdir_path=logdir_path,
     )

@@ -58,6 +58,25 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 
+# The rule set is named rather than left to ruff's default, because that
+# default is not stable across ruff versions: 0.16 enables some 415 rules where
+# earlier releases enabled a few dozen, so an unpinned selection means two
+# developers on two ruff versions see two different code bases. `dev` allows
+# `ruff>=0.6`, so this has to be said out loud.
+[tool.ruff.lint]
+select = [
+    "E",       # pycodestyle — including bare `except:`
+    "F",       # pyflakes — unused imports and names, real mistakes
+    "I",       # import sorting
+    "UP",      # constructs made obsolete by the python version we require
+    "B",       # bugbear — likely bugs rather than style
+    "SIM",     # simplifications that remove a branch or a temporary
+    "C4",      # comprehensions written the long way
+    "PLR1722", # `exit()` instead of `sys.exit()`; `exit` is installed by the
+               # `site` module and is simply absent under `python -S`, which
+               # would turn a clean CLI exit into a NameError
+]
+
 # Deliberately not `strict = true`, which is what the Musibot components run.
 # TensorFlow 2.12 and h5py ship no type information, and this codebase descends
 # from research code written without annotations, so strict mode would report

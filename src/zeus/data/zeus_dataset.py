@@ -1,9 +1,11 @@
-from pathlib import Path
+import pickle
 from dataclasses import dataclass
+from pathlib import Path
+
 import numpy as np
 import tqdm
+
 from .samples_file import SamplesFile
-import pickle
 
 
 @dataclass
@@ -55,7 +57,7 @@ class ZeusDataset:
     May have been loaded either from a pickle file or from
     the unpickled form.
     """
-    
+
     def __init__(self, name: str, samples: list[ZeusDatasetSample]) -> None:
         self.name = name
         """Human-readable name of the dataset, used in logs, must be path-safe"""
@@ -63,7 +65,7 @@ class ZeusDataset:
         self.samples = samples
         """Inidividual samples of the dataset, ordered in the same
         way as the samples txt file"""
-    
+
     @staticmethod
     def load_from_samples_file(
         samples_file_path: Path,
@@ -86,17 +88,16 @@ class ZeusDataset:
         :param benevolent: Skip samples with missing images without raising.
         """
         zeus_dataset_samples: list[ZeusDatasetSample] = []
-        
+
         samples = SamplesFile.load(samples_file_path)
         with tqdm.tqdm(total=len(samples), disable=not show_progress_bar) as pbar:
             for sample in samples:
-
                 # load image
                 image: bytes | None = None
                 for extension in [".jpg", ".png"]:
-                    image_path = sample.path \
-                        .with_name(sample.path.name + image_suffix) \
-                        .with_suffix(extension)
+                    image_path = sample.path.with_name(sample.path.name + image_suffix).with_suffix(
+                        extension
+                    )
                     if image_path.exists():
                         image = image_path.read_bytes()
                         break
@@ -105,31 +106,29 @@ class ZeusDataset:
                         pbar.update(1)
                         continue
                     raise RuntimeError(
-                        f"Sample is missing an image file: {sample.name}\n" +
-                        "Set the 'benevolent' flag if such samples should be ignored."
+                        f"Sample is missing an image file: {sample.name}\n"
+                        + "Set the 'benevolent' flag if such samples should be ignored."
                     )
 
                 # load lmx
-                lmx = sample.path.with_suffix(".lmx") \
-                    .read_text(encoding="utf-8") \
-                    .rstrip("\r\n")
+                lmx = sample.path.with_suffix(".lmx").read_text(encoding="utf-8").rstrip("\r\n")
 
                 # load musicxml
                 musicxml: str | None = None
                 if with_musicxml:
-                    musicxml = sample.path \
-                        .with_suffix(".musicxml") \
-                        .read_text(encoding="utf-8")
-                
-                zeus_dataset_samples.append(ZeusDatasetSample(
-                    sample_name=sample.name,
-                    image=image,
-                    lmx=lmx,
-                    musicxml=musicxml,
-                ))
+                    musicxml = sample.path.with_suffix(".musicxml").read_text(encoding="utf-8")
+
+                zeus_dataset_samples.append(
+                    ZeusDatasetSample(
+                        sample_name=sample.name,
+                        image=image,
+                        lmx=lmx,
+                        musicxml=musicxml,
+                    )
+                )
 
                 pbar.update(1)
-            
+
         return ZeusDataset(
             name=samples_file_path.as_posix(),
             samples=zeus_dataset_samples,
@@ -146,19 +145,19 @@ class ZeusDataset:
 
         name = pickle_path.as_posix()
         if name.startswith("datasets/"):
-            name = name[len("datasets/"):]
+            name = name[len("datasets/") :]
         name = name.replace("/", "_")
 
         return ZeusDataset(
             name=name,
             samples=samples,
         )
-    
+
     def write_to_pickle_file(self, pickle_path: Path):
         """Writes the dataset to a pickle file"""
         with open(str(pickle_path), "wb") as file:
             pickle.dump(self.samples, file)
-    
+
     @staticmethod
     def combine_multiple(datasets: list["ZeusDataset"]) -> "ZeusDataset":
         """Combines multiple LMX datasets into one"""
@@ -167,7 +166,7 @@ class ZeusDataset:
         # only one
         if len(datasets) == 1:
             return datasets[0]
-        
+
         # combine
         name = ""
         samples: list[ZeusDatasetSample] = []
@@ -180,13 +179,11 @@ class ZeusDataset:
             name=name,
             samples=samples,
         )
-    
+
     def print_statistics(self):
         """Prints dataset statistics into the console"""
-        avg_len = np.mean(
-            [len(sample.lmx.split()) for sample in self.samples]
-        )
+        avg_len = np.mean([len(sample.lmx.split()) for sample in self.samples])
         print(
-            f"Loaded dataset {self.name}, {len(self.samples)} " +
-            f"examples, {avg_len:.2f} avg length."
+            f"Loaded dataset {self.name}, {len(self.samples)} "
+            + f"examples, {avg_len:.2f} avg length."
         )

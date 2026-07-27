@@ -1,8 +1,9 @@
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import json
-import yaml
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 @dataclass
@@ -18,7 +19,7 @@ class ArchitectureOptions:
 
     height: int
     """Image height."""
-    
+
     cnn_dim: int
     """CNN dim at original resolution."""
 
@@ -63,15 +64,11 @@ class ArchitectureOptions:
             return ArchitectureOptions.from_yaml(yaml_path)
 
         # this is a fallback for old models where YAML is missing
-        return ArchitectureOptions.from_legacy_json(
-            model_folder_path / "options.json"
-        )
-    
+        return ArchitectureOptions.from_legacy_json(model_folder_path / "options.json")
+
     def write_to_model_folder(self, model_folder_path: Path):
         """Writes our architecture options into a model folder"""
-        self.write_to_yaml_file(
-            model_folder_path / "architecture_options.yaml"
-        )
+        self.write_to_yaml_file(model_folder_path / "architecture_options.yaml")
 
     @staticmethod
     def from_yaml(file_path: Path) -> "ArchitectureOptions":
@@ -79,7 +76,7 @@ class ArchitectureOptions:
         Loads options from `architecture_options.yaml`
         file that is part of a trained model folder.
         """
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             yaml_data: dict = yaml.safe_load(file)
             return ArchitectureOptions(**yaml_data)
 
@@ -98,7 +95,7 @@ class ArchitectureOptions:
         """
         options: dict[str, Any] = json.loads(json_file_path.read_text())
         return ArchitectureOptions(
-            name=str(options.get("name", "")), # optional, because introduced later
+            name=str(options.get("name", "")),  # optional, because introduced later
             height=int(options["height"]),
             cnn_dim=int(options["cnn_dim"]),
             cnn_resblocks=int(options["cnn_resblocks"]),

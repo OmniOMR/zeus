@@ -1,7 +1,8 @@
 import argparse
-from pathlib import Path
-from ..model.inference_options import InferenceOptions
 from datetime import datetime
+from pathlib import Path
+
+from ..model.inference_options import InferenceOptions
 
 
 def define_parser(parser: argparse.ArgumentParser):
@@ -11,34 +12,29 @@ def define_parser(parser: argparse.ArgumentParser):
         "--model",
         required=True,
         type=str,
-        help="Path to a trained model folder e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'"
+        help="Path to a trained model folder e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'",
     )
     parser.add_argument(
-        "--dataset",
-        required=True,
-        type=str,
-        help="Path to the dataset pickle used for evaluation"
+        "--dataset", required=True, type=str, help="Path to the dataset pickle used for evaluation"
     )
     parser.add_argument(
         "--output",
         default=f"out/evaluation-{timestamp}",
         type=str,
-        help=
-            "Path to the output folder where evaluation " +
-            "results willl be written"
+        help="Path to the output folder where evaluation " + "results willl be written",
     )
     parser.add_argument(
         "--batch_size",
         default=64,
         type=int,
-        help="Number of samples per batch when doing inference"
+        help="Number of samples per batch when doing inference",
     )
 
 
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # deffered imports as they import tensorflow which is slow
-    from ..model.zeus import Zeus
     from ..data.zeus_dataset import ZeusDataset
+    from ..model.zeus import Zeus
 
     # prepare CLI arguments
     model_folder_path = Path(args.model)
@@ -54,9 +50,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     zeus = Zeus.load(model_folder_path)
     zeus.evaluate(
         dataset=dataset,
-        inference_options=InferenceOptions(
-            batch_size=batch_size
-        ),
+        inference_options=InferenceOptions(batch_size=batch_size),
         with_progress_bar=True,
         write_predictions_to=output_path / "predictions.lmx",
         write_metrics_to=output_path / "metrics.yaml",

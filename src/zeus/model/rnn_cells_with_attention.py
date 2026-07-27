@@ -3,6 +3,7 @@ import tensorflow as tf
 
 class RNNCellsWithAttention(tf.keras.layers.AbstractRNNCell):
     """A class adding Bahdanau attention to the given RNN cell."""
+
     def __init__(self, cells, attention_dim):
         super().__init__()
         self._cells = cells
@@ -19,11 +20,15 @@ class RNNCellsWithAttention(tf.keras.layers.AbstractRNNCell):
         self._encoded_projected = self._project_encoder_layer(encoded)
 
     def call(self, inputs, states):
-        projected = self._encoded_projected + tf.expand_dims(self._project_decoder_layer(tf.concat(states[0], axis=1)), axis=1)
+        projected = self._encoded_projected + tf.expand_dims(
+            self._project_decoder_layer(tf.concat(states[0], axis=1)), axis=1
+        )
         weights = tf.nn.softmax(self._output_layer(tf.tanh(projected)), axis=1)
         attention = tf.reduce_sum(self._encoded * weights, axis=1)
         inputs, new_states = tf.concat([inputs, attention], axis=1), []
-        for i, (cell, state) in enumerate(zip(self._cells, states)):
+        # Keras builds `states` from `state_size`, which is one entry per cell,
+        # so the two are the same length by construction — `strict` says so.
+        for i, (cell, state) in enumerate(zip(self._cells, states, strict=True)):
             outputs, new_state = cell(inputs, state)
             inputs = outputs if i == 0 else inputs + outputs
             new_states.append(new_state)

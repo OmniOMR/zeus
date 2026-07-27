@@ -1,6 +1,7 @@
-from dataclasses import dataclass, asdict
-from typing import Literal
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Literal
+
 import yaml
 
 
@@ -26,7 +27,7 @@ class TrainingOptions:
 
     augmentations: str = "h:8"
     """List of image augmentations to randomly choose from during training"""
-    
+
     batch_size: int = 64
     """How many samples to use per training batch"""
 

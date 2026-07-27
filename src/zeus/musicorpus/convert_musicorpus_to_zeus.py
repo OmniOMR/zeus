@@ -1,24 +1,26 @@
-from pathlib import Path
-from .extract_samples_for_page import extract_samples_for_page
 import json
-from ..data.samples_file import SamplesFile
-import tqdm
-from .convert_musicxml import convert_musicxml
-from .convert_image import convert_image
 import logging
+from pathlib import Path
+
+import tqdm
+
+from ..data.samples_file import SamplesFile
+from .convert_image import convert_image
+from .convert_musicxml import convert_musicxml
+from .extract_samples_for_page import extract_samples_for_page
 
 
 def convert_musicorpus_to_zeus(
-        input_path: Path,
-        output_path: Path,
-        take_staves: bool,
-        take_grandstaves: bool,
-        re_crop: bool,
-        normalize_image_height: int | None,
+    input_path: Path,
+    output_path: Path,
+    take_staves: bool,
+    take_grandstaves: bool,
+    re_crop: bool,
+    normalize_image_height: int | None,
 ):
     """
     Converts a MusiCorpus dataset to a Zeus dataset.
-    
+
     :param input_path: Path to a MusiCorpus dataset, e.g. 'CVC.Dolores'
     :param output_path: Path to the output folder, e.g. 'dolores-training'.
         The output folder must not exist before running this function.
@@ -28,25 +30,21 @@ def convert_musicorpus_to_zeus(
         instead of using crops from the input MusiCorpus dataset.
     :param normalize_image_height: Rescale all sample images to the given height.
     """
-    
+
     # create the output folder
     output_path.mkdir(parents=True, exist_ok=False)
 
     # load splits
-    with open(input_path / "splits.json", "r") as f:
+    with open(input_path / "splits.json") as f:
         splits: dict[str, list[str]] = json.load(f)
-    
+
     # define the "all" split
-    splits["all"] = list(sorted(set(
-        page_name
-        for split in splits.values()
-        for page_name in split
-    )))
+    splits["all"] = sorted({page_name for split in splits.values() for page_name in split})
 
     # define the zeus samples files
     samples_files = {
         split_name: SamplesFile.empty(output_path / f"samples.{split_name}.txt")
-        for split_name in splits.keys()
+        for split_name in splits
     }
 
     # convert data page by page
@@ -54,7 +52,7 @@ def convert_musicorpus_to_zeus(
         for mc_sample in extract_samples_for_page(
             page_path=input_path / page_name,
             take_staves=take_staves,
-            take_grandstaves=take_grandstaves
+            take_grandstaves=take_grandstaves,
         ):
             try:
                 convert_musicxml(
@@ -67,10 +65,13 @@ def convert_musicorpus_to_zeus(
                     re_crop=re_crop,
                     normalize_image_height=normalize_image_height,
                 )
-            except KeyboardInterrupt:
-                raise
-            except:
-                # skip the sample on error
+            except Exception:
+                # Skip the sample on error: one unconvertible sample should not
+                # abandon a conversion that runs for hours. `Exception` rather
+                # than a bare `except:`, which also swallowed KeyboardInterrupt
+                # and needed an explicit re-raise clause above it to stay
+                # interruptible; KeyboardInterrupt is not an Exception, so it
+                # now propagates on its own.
                 logging.exception(f"Error converting sample {mc_sample.get_zeus_sample_name()}:")
                 continue
 
@@ -88,4 +89,3 @@ def convert_musicorpus_to_zeus(
     print("These are sample counts for individual splits:")
     for split_name, samples_file in samples_files.items():
         print(split_name + ":", len(samples_file))
-    

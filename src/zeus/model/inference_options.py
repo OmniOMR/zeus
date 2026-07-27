@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 @dataclass
 class InferenceOptions:
     """Options that constrain the way the model does inference"""
-    
+
     batch_size: int = 64
     """How many samples to use per inference batch"""
 
