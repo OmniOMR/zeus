@@ -6,6 +6,10 @@ from lmx.musescore.MuseScore import MuseScore
 
 from ..visualization.render_zeus_dataset_samples import render_zeus_dataset_samples
 
+NAME = "render"
+
+DESCRIPTION = "Renders Zeus dataset MusicXML samples via MuseScore"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -14,7 +18,7 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Path to the samples.txt file whose samples will be rendered",
     )
     parser.add_argument(
-        "--image_suffix",
+        "--image-suffix",
         default="_rendered",
         type=str,
         help="Suffix to add to output image base paths before the extension; "
@@ -22,13 +26,13 @@ def define_parser(parser: argparse.ArgumentParser):
         + "'_distorted' suffix.",
     )
     parser.add_argument(
-        "--render_invisible",
+        "--render-invisible",
         default=False,
         action="store_true",
         help="Render invisible clefs and signatures in gray, " + "useful for data inspection.",
     )
     parser.add_argument(
-        "--page_width_tenths",
+        "--page-width-tenths",
         default=2_500,
         type=int,
         help="How wide of a paper should be used to render each sample. "

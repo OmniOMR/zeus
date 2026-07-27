@@ -1,130 +1,94 @@
+"""The `zeus` command line tool.
+
+Each command lives in a module of its own that declares its own `NAME` and
+`DESCRIPTION` and provides `define_parser` and `execute`. This module only
+collects them; adding a command means writing that module and naming it in
+`COMMANDS` below.
+
+None of the command modules imports TensorFlow at module level — each defers it
+into its `execute` — so building the whole parser stays cheap and `zeus --help`
+answers immediately.
+"""
+
 import argparse
 import sys
+from typing import Protocol
 
-import zeus.cli.evaluate_command
-import zeus.cli.musicorpus_command
-import zeus.cli.pickle_command
-import zeus.cli.render_command
-import zeus.cli.train_command
-import zeus.cli.visualize_data_command
-import zeus.cli.visualize_predictions_command
-
-# None of these command modules imports TensorFlow at module level — each
-# defers it into its `execute` — so building the whole parser stays cheap and
-# `zeus --help` answers immediately.
-
-parser = argparse.ArgumentParser(prog="zeus", description="CLI for using the Zeus model")
-
-subparsers = parser.add_subparsers(title="available commands", dest="root_command_name")
-
-root_command_handlers = {}
-
-
-############################
-# Define all root commands #
-############################
-
-
-# === train ===
-
-zeus.cli.train_command.define_parser(
-    subparsers.add_parser(
-        "train", aliases=[], description="Trains a new model on the given dataset"
-    )
+from zeus.cli import (
+    evaluate_command,
+    musicorpus_command,
+    pickle_command,
+    render_command,
+    train_command,
+    visualize_data_command,
+    visualize_predictions_command,
 )
-root_command_handlers["train"] = zeus.cli.train_command.execute
 
 
-# === visualize data ===
+class Command(Protocol):
+    """What a command module has to provide to appear in `COMMANDS`."""
 
-zeus.cli.visualize_data_command.define_parser(
-    subparsers.add_parser(
-        "visualize_data",
-        aliases=[],
-        description="Visualizes training data for given training settings",
-    )
-)
-root_command_handlers["visualize_data"] = zeus.cli.visualize_data_command.execute
+    NAME: str
+    """The subcommand as typed, e.g. `visualize-data`."""
 
+    DESCRIPTION: str
+    """One line, shown both in `zeus --help` and in the command's own help."""
 
-# === evaluate ===
+    def define_parser(self, parser: argparse.ArgumentParser) -> None:
+        """Add this command's arguments to its subparser."""
+        ...
 
-zeus.cli.evaluate_command.define_parser(
-    subparsers.add_parser(
-        "evaluate", aliases=[], description="Evaluates a trained model against a given dataset"
-    )
-)
-root_command_handlers["evaluate"] = zeus.cli.evaluate_command.execute
+    def execute(self, parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+        """Run the command."""
+        ...
 
 
-# === visualize predictions ===
-
-zeus.cli.visualize_predictions_command.define_parser(
-    subparsers.add_parser(
-        "visualize_predictions",
-        aliases=[],
-        description="Visualizes predictions that result from the 'evaluate' command",
-    )
-)
-root_command_handlers["visualize_predictions"] = zeus.cli.visualize_predictions_command.execute
-
-
-# === pickle ===
-
-zeus.cli.pickle_command.define_parser(
-    subparsers.add_parser(
-        "pickle",
-        aliases=[],
-        description="Creates a pickled representation of a dataset "
-        + "represented by samples.txt file. Creates a "
-        + "samples.pickle file that can be used by Zeus.",
-    )
-)
-root_command_handlers["pickle"] = zeus.cli.pickle_command.execute
+COMMANDS: list[Command] = [
+    train_command,
+    evaluate_command,
+    visualize_data_command,
+    visualize_predictions_command,
+    pickle_command,
+    musicorpus_command,
+    render_command,
+]
 
 
-# === predict ===
+def build_parser() -> argparse.ArgumentParser:
+    """Assemble the whole CLI, one subparser per command."""
+    parser = argparse.ArgumentParser(prog="zeus", description="CLI for using the Zeus model")
+    subparsers = parser.add_subparsers(title="available commands", dest="command")
 
-# TODO
+    for command in COMMANDS:
+        command.define_parser(
+            subparsers.add_parser(
+                command.NAME,
+                # `description` heads the command's own --help; `help` is the
+                # line beside its name in `zeus --help`, which listed bare
+                # command names and no explanation before.
+                description=command.DESCRIPTION,
+                help=command.DESCRIPTION,
+            )
+        )
 
-
-# === musicorpus ===
-
-zeus.cli.musicorpus_command.define_parser(
-    subparsers.add_parser(
-        "musicorpus", aliases=[], description="Converts a MusiCorpus dataset into a Zeus dataset"
-    )
-)
-root_command_handlers["musicorpus"] = zeus.cli.musicorpus_command.execute
-
-
-# === render ===
-
-zeus.cli.render_command.define_parser(
-    subparsers.add_parser(
-        "render", aliases=[], description="Renders Zeus dataset MusicXML samples via MuseScore"
-    )
-)
-root_command_handlers["render"] = zeus.cli.render_command.execute
+    return parser
 
 
-######################
-# Execute the parser #
-######################
-
-
-def run():
-    """
-    This method is called from all the places
-    that need a method reference to invoke this CLI
-    """
+def run() -> None:
+    """The `zeus` entry point, and what `python -m zeus` calls."""
+    parser = build_parser()
     args = parser.parse_args()
 
-    if args.root_command_name is None:
+    if args.command is None:
         parser.print_help()
         sys.exit(2)
 
-    root_command_handlers[args.root_command_name](parser, args)
+    for command in COMMANDS:
+        if args.command == command.NAME:
+            command.execute(parser, args)
+            return
+
+    raise AssertionError(f"argparse accepted a command nobody handles: {args.command!r}")
 
 
 if __name__ == "__main__":

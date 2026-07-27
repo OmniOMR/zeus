@@ -9,12 +9,16 @@ from ..model.architecture_options import ArchitectureOptions
 from ..model.token_map import TokenMap
 from ..model.training_options import TrainingOptions
 
+NAME = "visualize-data"
+
+DESCRIPTION = "Visualizes training data for given training settings"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 
     parser.add_argument(
-        "--new_model",
+        "--architecture",
         required=True,
         type=str,
         help="When training a new model, this argument specifies its "
@@ -35,7 +39,7 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Data augmentation instructions, defaults to 'h:8'",
     )
     parser.add_argument(
-        "--batch_size", default=64, type=int, help="Number of samples per batch when doing training"
+        "--batch-size", default=64, type=int, help="Number of samples per batch when doing training"
     )
     parser.add_argument("--seed", type=int, default=42, help="RNG seed")
     parser.add_argument(
@@ -55,7 +59,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # prepare CLI arguments
     # Required by the parser, so it is always present.
-    new_model = str(args.new_model)
+    architecture = str(args.architecture)
     train_pickle_paths = [Path(p) for p in args.train]
     augmentations = str(args.augment)
     batch_size = int(args.batch_size)
@@ -78,7 +82,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # new dummy model to run the visualization with
     # TODO: visualization should be extracted out from the Zeus class
     zeus = Zeus(
-        architecture_options=ArchitectureOptions.from_well_known(new_model),
+        architecture_options=ArchitectureOptions.from_well_known(architecture),
         token_map=TokenMap.create_from_dataset(train_dataset.samples),
     )
 

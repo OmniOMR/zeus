@@ -5,6 +5,10 @@ from pathlib import Path
 
 from ..musicorpus.convert_musicorpus_to_zeus import convert_musicorpus_to_zeus
 
+NAME = "musicorpus"
+
+DESCRIPTION = "Converts a MusiCorpus dataset into a Zeus dataset"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -20,10 +24,10 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Path to the output Zeus dataset, e.g. path to the 'dolores-training' folder",
     )
     parser.add_argument(
-        "--take_staves", default=False, action="store_true", help="Take all solo staves as samples"
+        "--take-staves", default=False, action="store_true", help="Take all solo staves as samples"
     )
     parser.add_argument(
-        "--take_grandstaves",
+        "--take-grandstaves",
         default=False,
         action="store_true",
         help="Take all grandstaves as samples",
@@ -35,14 +39,14 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Overwrite the output folder if it already exists",
     )
     parser.add_argument(
-        "--re_crop",
+        "--re-crop",
         default=False,
         action="store_true",
         help="Manually crop sample images from the page images, instead of "
         + "using crops from the MusiCorpus dataset. Not implemented yet.",
     )
     parser.add_argument(
-        "--normalize_image_height",
+        "--normalize-image-height",
         type=str,
         default=None,
         help="Rescale sample images to the given height in pixels. Not implemented yet.",

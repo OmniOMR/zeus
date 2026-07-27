@@ -6,12 +6,16 @@ from pathlib import Path
 from ..model.architecture_options import ArchitectureOptions
 from ..model.token_map import TokenMap
 
+NAME = "visualize-predictions"
+
+DESCRIPTION = "Visualizes predictions that result from the 'evaluate' command"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 
     parser.add_argument(
-        "--new_model",
+        "--architecture",
         required=True,
         type=str,
         help="When training a new model, this argument specifies its "
@@ -43,7 +47,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # prepare CLI arguments
     # Required by the parser, so it is always present.
-    new_model = str(args.new_model)
+    architecture = str(args.architecture)
     dataset_pickle_path = Path(args.dataset)
     predictions_file_path = Path(args.predictions)
 
@@ -60,7 +64,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # new dummy model to run the visualization with
     # TODO: visualization should be extracted out from the Zeus class
     zeus = Zeus(
-        architecture_options=ArchitectureOptions.from_well_known(new_model),
+        architecture_options=ArchitectureOptions.from_well_known(architecture),
         token_map=TokenMap.create_from_dataset(dataset.samples),
     )
 

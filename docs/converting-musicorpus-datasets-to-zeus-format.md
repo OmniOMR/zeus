@@ -7,7 +7,7 @@ This is the basic command to use:
 ```bash
 zeus musicorpus \
     --input ~/musicorpus/CVC.Dolores \
-    --take_staves \
+    --take-staves \
     --output datasets/dolores
 ```
 
@@ -23,14 +23,14 @@ The output is a new folder containing the Zeus representation of the extracted d
 The command must be instructed to take either staves or grandstaves as samples, or possible both, by usigin these two toggles:
 
 ```
---take_staves
---take_grandstaves
+--take-staves
+--take-grandstaves
 ```
 
 The command also supports these additional flags:
 
 **`--force`** Overwrite the output folder, if it exists.
 
-**`--re_crop`** Instead of using staff/grandstaff level `image.jpg` files, the command loads the `layout.json` file and performs crops manually, with special attention to the distribution of crop region position to the staff position (to make the trained model resilient to imprecise crops). Do this only with training data not evaluation so that evaluation results are comparable across models.
+**`--re-crop`** Instead of using staff/grandstaff level `image.jpg` files, the command loads the `layout.json` file and performs crops manually, with special attention to the distribution of crop region position to the staff position (to make the trained model resilient to imprecise crops). Do this only with training data not evaluation so that evaluation results are comparable across models.
 
-**`--normalize_image_height`** Pre-compress sample images to a specific height to reduce Zeus dataset size. The argument is the number of pixels.
+**`--normalize-image-height`** Pre-compress sample images to a specific height to reduce Zeus dataset size. The argument is the number of pixels.

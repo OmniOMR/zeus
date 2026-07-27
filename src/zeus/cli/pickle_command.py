@@ -4,13 +4,20 @@ from pathlib import Path
 
 from ..data.zeus_dataset import ZeusDataset
 
+NAME = "pickle"
+
+DESCRIPTION = (
+    "Creates a pickled representation of a dataset represented by a "
+    "samples.txt file. Creates a samples.pickle file that can be used by Zeus."
+)
+
 
 def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "samples_file_path", type=str, help="Path to the samples.txt file that will be pickled"
     )
     parser.add_argument(
-        "--image_suffix",
+        "--image-suffix",
         default="",
         type=str,
         help="Suffix to add to image base paths before the extension; "
@@ -18,7 +25,7 @@ def define_parser(parser: argparse.ArgumentParser):
         + "'_distorted' suffix.",
     )
     parser.add_argument(
-        "--with_musicxml",
+        "--with-musicxml",
         default=False,
         action="store_true",
         help="Include MusicXML data in the pickle, only needed " + "for TEDn evaluation.",

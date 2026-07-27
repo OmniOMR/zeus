@@ -4,12 +4,16 @@ from pathlib import Path
 
 from ..model.inference_options import InferenceOptions
 
+NAME = "evaluate"
+
+DESCRIPTION = "Evaluates a trained model against a given dataset"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 
     parser.add_argument(
-        "--model",
+        "--model-snapshot",
         required=True,
         type=str,
         help="Path to a trained model folder e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'",
@@ -24,7 +28,7 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Path to the output folder where evaluation " + "results willl be written",
     )
     parser.add_argument(
-        "--batch_size",
+        "--batch-size",
         default=64,
         type=int,
         help="Number of samples per batch when doing inference",
@@ -37,7 +41,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     from ..model.zeus import Zeus
 
     # prepare CLI arguments
-    model_folder_path = Path(args.model)
+    model_folder_path = Path(args.model_snapshot)
     dataset_pickle_path = Path(args.dataset)
     output_path = Path(args.output)
     batch_size = int(args.batch_size)

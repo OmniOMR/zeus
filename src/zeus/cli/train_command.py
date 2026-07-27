@@ -11,20 +11,24 @@ from ..model.inference_options import InferenceOptions
 from ..model.token_map import TokenMap
 from ..model.training_options import TrainingOptions
 
+NAME = "train"
+
+DESCRIPTION = "Trains a new model on the given dataset"
+
 
 def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--experiment", type=str, required=True, help="Name of the experiment, used in logs"
     )
     parser.add_argument(
-        "--model",
+        "--model-snapshot",
         default=None,
         type=str,
         help="Path to load a model from to refine instead of "
         + "training a new one, e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'",
     )
     parser.add_argument(
-        "--new_model",
+        "--architecture",
         default=None,
         type=str,
         help="When training a new model, this argument specifies its "
@@ -61,19 +65,19 @@ def define_parser(parser: argparse.ArgumentParser):
         help="How many epochs on the training dataset to train for",
     )
     parser.add_argument(
-        "--evaluation_from", type=int, default=1, help="Start evaluation with this epoch onward"
+        "--evaluation-from", type=int, default=1, help="Start evaluation with this epoch onward"
     )
     parser.add_argument(
-        "--evaluation_each", type=int, default=1, help="Run evaluation each this number of epochs"
+        "--evaluation-each", type=int, default=1, help="Run evaluation each this number of epochs"
     )
     parser.add_argument(
-        "--batch_size", default=64, type=int, help="Number of samples per batch when doing training"
+        "--batch-size", default=64, type=int, help="Number of samples per batch when doing training"
     )
     parser.add_argument(
-        "--learning_rate", default=1e-3, type=float, help="Initial learning rate, defaults to 1e-3"
+        "--learning-rate", default=1e-3, type=float, help="Initial learning rate, defaults to 1e-3"
     )
     parser.add_argument(
-        "--lr_decay",
+        "--lr-decay",
         default="cos",
         choices=["none", "cos"],
         help="Type of learning rate decay, defaults to none",
@@ -86,7 +90,7 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Maximum number of threads to use, 0 meaning " + "automatic setting (default)",
     )
     parser.add_argument(
-        "--quiet_tf",
+        "--quiet-tf",
         default=False,
         action="store_true",
         help="Set Tensorflow logging to level 2 "
@@ -107,8 +111,8 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
 
     # prepare CLI arguments
     experiment = str(args.experiment)
-    model_path: Path | None = Path(args.model) if args.model else None
-    new_model: str | None = str(args.new_model) if args.new_model else None
+    snapshot_path: Path | None = Path(args.model_snapshot) if args.model_snapshot else None
+    architecture: str | None = str(args.architecture) if args.architecture else None
     train_pickle_paths = [Path(p) for p in args.train]
     augmentations = str(args.augment)
     dev_pickle_paths = [Path(p) for p in args.dev]
@@ -125,8 +129,8 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     threads = int(args.threads)
 
     # either load or create a model
-    if new_model is None and model_path is None:
-        print("Specify either the --model or --new_model arguments,")
+    if architecture is None and snapshot_path is None:
+        print("Specify either the --model-snapshot or --architecture arguments,")
         print("i.e, you must either load a model or train a new one.")
         sys.exit(1)
 
@@ -171,15 +175,15 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     print("")
 
     # create new or load an existing model
-    if model_path is None:
-        assert new_model is not None
-        architecture_options = ArchitectureOptions.from_well_known(new_model)
+    if snapshot_path is None:
+        assert architecture is not None
+        architecture_options = ArchitectureOptions.from_well_known(architecture)
         zeus = Zeus(
             architecture_options=architecture_options,
             token_map=TokenMap.create_from_dataset(train_dataset.samples),
         )
     else:
-        zeus = Zeus.load(model_path)
+        zeus = Zeus.load(snapshot_path)
 
     # train the new model
     zeus.train(
@@ -190,7 +194,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             epochs=epochs,
             evaluation_from=evaluation_from,
             evaluation_each=evaluation_each,
-            is_finetuning=model_path is not None,
+            is_finetuning=snapshot_path is not None,
             augmentations=augmentations,
             batch_size=batch_size,
             learning_rate=learning_rate,

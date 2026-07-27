@@ -158,7 +158,7 @@ my-dataset/
 When browsing the data in the file system, you can see side-by-side all variants of the same image. When pickling the data, you have to choose one and the resulting pickle file will only contain one annotation-image pair for each sample:
 
 ```bash
-zeus pickle --image_suffix '_distorted' datasets/grandstaff/samples.all.txt
+zeus pickle --image-suffix '_distorted' datasets/grandstaff/samples.all.txt
 ```
 
 This command creates a `samples_distorted.all.pickle` file in the dataset folder.
@@ -176,9 +176,9 @@ The `zeus` CLI lets you render the `.musicxml` samples of a dataset into B/W `.p
 
 ```bash
 zeus render \
-    --image_suffix '_debug' \
-    --render_invisible \
-    --page_width_tenths 6_000 \
+    --image-suffix '_debug' \
+    --render-invisible \
+    --page-width-tenths 6_000 \
     datasets/dolores/samples.all.txt
 ```
 
@@ -188,10 +188,10 @@ You can also render samples for training purposes (or pre-training) using this c
 
 ```bash
 zeus render \
-    --image_suffix '_rendered' \
+    --image-suffix '_rendered' \
     datasets/dolores/samples.all.txt
 ```
 
 The command creates a `musescore/` folder in the current working directory and downloads MuseScore there. If you're calling it from the root of your repository, make sure to add the `/musescore/` path to your `.gitignore` file.
 
-The command needs a maximum page-width specification, adjusted via the `--page_width_tenths` option. The default is set such that the resulting images are not too wide (if the MusicXML contains too much content or is fauly - e.g. expanded multi-measure rests). 40 tenths are one staff height. Samples that do not fit the page width will not be rendered (and their list is printed afterwards).
+The command needs a maximum page-width specification, adjusted via the `--page-width-tenths` option. The default is set such that the resulting images are not too wide (if the MusicXML contains too much content or is fauly - e.g. expanded multi-measure rests). 40 tenths are one staff height. Samples that do not fit the page width will not be rendered (and their list is printed afterwards).

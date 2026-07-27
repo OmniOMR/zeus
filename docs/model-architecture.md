@@ -18,5 +18,5 @@ There are a few pre-defined architecture options you can choose from:
 When training a new model, the architecture to be used must be specified as part of the command:
 
 ```bash
-zeus train ... --new_model solo26 ...
+zeus train ... --architecture solo26 ...
 ```
