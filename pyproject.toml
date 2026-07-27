@@ -23,7 +23,10 @@ dependencies = [
 ]
 description = "Image-to-sequence model Optical Music Recognition"
 readme = "README.md"
-requires-python = "~=3.10"
+# Pinned to 3.10 rather than left open-ended, because TensorFlow 2.12 has no
+# wheels for 3.11 or newer. `~=3.10` used to be written here, which permits
+# 3.11 and 3.12 and so promised an installation that cannot work.
+requires-python = ">=3.10,<3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Natural Language :: English",
@@ -32,9 +35,38 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
 [project.urls]
 Homepage = "https://github.com/OmniOMR/zeus"
 Issues = "https://github.com/OmniOMR/zeus/issues"
 
-[project.gui-scripts]
+# `scripts`, not `gui-scripts`. The two behave alike on Linux, but a gui-script
+# is built as a no-console executable on Windows, where a CLI would then print
+# nowhere at all.
+[project.scripts]
 zeus = "zeus.cli.run:run"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+# Deliberately not `strict = true`, which is what the Musibot components run.
+# TensorFlow 2.12 and h5py ship no type information, and this codebase descends
+# from research code written without annotations, so strict mode would report
+# hundreds of errors that say nothing about correctness. These settings catch
+# real mistakes inside the functions we have; the screws can be tightened as
+# annotations arrive.
+[tool.mypy]
+files = ["src/zeus", "tests"]
+mypy_path = "src"
+python_version = "3.10"
+ignore_missing_imports = true
+check_untyped_defs = true
