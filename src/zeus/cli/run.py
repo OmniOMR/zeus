@@ -16,6 +16,7 @@ from typing import Protocol
 
 from zeus.cli import (
     evaluate_command,
+    musibot_command,
     musicorpus_command,
     pickle_command,
     predict_command,
@@ -48,6 +49,7 @@ COMMANDS: list[Command] = [
     train_command,
     evaluate_command,
     predict_command,
+    musibot_command,
     visualize_data_command,
     visualize_predictions_command,
     pickle_command,

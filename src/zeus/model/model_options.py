@@ -29,6 +29,9 @@ more often than not — and a snapshot that disagrees can be corrected by writin
 the file into its folder by hand, without retraining anything.
 """
 
+DEFAULT_MUSIBOT_MODEL_NAME = "zeus"
+"""What a snapshot that does not name itself is announced as."""
+
 
 @dataclass
 class ModelOptions:
@@ -45,6 +48,31 @@ class ModelOptions:
     travels inside the snapshot, where it cannot be got wrong at deployment
     time. A grandstaff model told to read staves does not fail; it transcribes
     confidently and wrongly, and nothing anywhere notices.
+    """
+
+    musibot_model_name: str | None = None
+    """The name a Musibot worker announces for this snapshot, which is what a
+    *Pipeline* pins. Set from the training run's `--experiment` name, so a
+    fine-tuned model is a different model rather than a new version of its
+    parent. `None` falls back to `zeus`.
+
+    Prefixed because these two are deployment identity rather than anything
+    Zeus itself reads, and because `ArchitectureOptions` already has a `name`
+    holding `grand24` or `solo26` — one file away, meaning something else.
+    """
+
+    musibot_model_version: str | None = None
+    """The version announced beside the name, which together identify the
+    model to Musibot. Set from the training run's start time and the snapshot
+    within that run, e.g. `2026-07-28-143052-e50`.
+
+    The snapshot's own name has to be in there. `store` is called once per
+    evaluated epoch, so every epoch of one run shares a start time, and
+    choosing the best epoch off the validation curve is the documented
+    workflow — without it, deploying `e40` and `e50` would announce the same
+    identity and Musibot would merge them into one registry entry.
+
+    `None` falls back to the snapshot folder's own name.
     """
 
     def __post_init__(self) -> None:
@@ -73,6 +101,21 @@ class ModelOptions:
     def accepts(self, subdivision: str) -> bool:
         """Whether this model can read the given Musicorpus subdivision."""
         return subdivision in self.input_subdivisions
+
+    def musibot_identity(self, model_folder_path: Path) -> tuple[str, str]:
+        """The name and version a Musibot worker announces for this snapshot.
+
+        Together these are the model's identity to Musibot, and two workers
+        announcing the same pair are taken to be the same model scaled
+        horizontally. Snapshots that do not name themselves — every one written
+        before these fields existed — fall back to `zeus` and to the snapshot
+        folder's own name, which in practice is descriptive and unique:
+        `zeus-olimpic-1.0-2024-02-12.model` announces that as its version.
+        """
+        return (
+            self.musibot_model_name or DEFAULT_MUSIBOT_MODEL_NAME,
+            self.musibot_model_version or model_folder_path.name.removesuffix(".model"),
+        )
 
     @staticmethod
     def from_model_folder(model_folder_path: Path) -> "ModelOptions":

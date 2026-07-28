@@ -22,6 +22,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - `zeus` **`visualize-data`** `--help`: Renders training data, as the model sees it, into a browsable HTML page.
 - `zeus` **`visualize-predictions`** `--help`: Renders the output of `evaluate` beside its gold data, ordered by symbol error rate.
 - `zeus` **`predict`** `--help`: Reads music notation off staff images and writes MusicXML transcriptions.
+- `zeus` **`musibot`** [`--help`](docs/musibot-model.md): Runs Zeus as a [Musibot](https://github.com/OmniOMR/musibot) model, driven by a worker head over pipes.
 
 
 ## Documentation
@@ -33,6 +34,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - [Model snapshots](docs/model-snapshots.md)
 - [Training Zeus](docs/training-zeus.md)
 - [Python API](docs/python-api.md)
+- [Running Zeus as a Musibot model](docs/musibot-model.md)
 - Training on the UFAL LRC cluster
 - Visualizing training data
 - Visualizing model predictions

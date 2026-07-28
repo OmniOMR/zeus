@@ -1,5 +1,6 @@
 import contextlib
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 import tensorflow as tf
@@ -101,8 +102,33 @@ class Zeus:
 
         return zeus
 
-    def store(self, model_folder_path: Path, overwrite=False):
-        """Stores the model weights and parameters into a folder"""
+    def snapshot_version(self, snapshot_name: str) -> str | None:
+        """Compose the announced version of one snapshot of a training run.
+
+        During training `musibot_model_version` holds the run's stamp — the
+        moment training started — and each snapshot it produces appends its own
+        name to that, so `e40` and `e50` of one run are distinguishable to
+        Musibot. Returns None when the run has no stamp, which is what leaves
+        the loader falling back to the snapshot folder's name.
+        """
+        run_stamp = self.model_options.musibot_model_version
+        if run_stamp is None:
+            return None
+        return f"{run_stamp}-{snapshot_name}"
+
+    def store(
+        self,
+        model_folder_path: Path,
+        overwrite: bool = False,
+        musibot_model_version: str | None = None,
+    ):
+        """Stores the model weights and parameters into a folder
+
+        :param musibot_model_version: Written into the snapshot in place of the
+            version currently held, without changing this model's own. Training
+            uses it to give each epoch's snapshot a version of its own while
+            keeping one run-wide stamp in hand for the next.
+        """
         if model_folder_path.exists():
             if overwrite:
                 shutil.rmtree(model_folder_path)
@@ -125,7 +151,10 @@ class Zeus:
         self.architecture_options.write_to_model_folder(model_folder_path)
 
         # model options
-        self.model_options.write_to_model_folder(model_folder_path)
+        model_options = self.model_options
+        if musibot_model_version is not None:
+            model_options = replace(model_options, musibot_model_version=musibot_model_version)
+        model_options.write_to_model_folder(model_folder_path)
 
         # token map
         self.token_map.write_to_model_folder(model_folder_path)
@@ -186,7 +215,10 @@ class Zeus:
                     return
 
                 # store model weights to logdir
-                zeus.store(logdir_path / "snapshots" / f"e{epoch + 1}.model")
+                zeus.store(
+                    logdir_path / "snapshots" / f"e{epoch + 1}.model",
+                    musibot_model_version=zeus.snapshot_version(f"e{epoch + 1}"),
+                )
 
                 datasets_for_evaluation = dev_datasets
                 if epoch + 1 == training_options.epochs:
@@ -221,7 +253,10 @@ class Zeus:
         )
 
         # store the final weights
-        self.store(logdir_path / "snapshots" / "final.model")
+        self.store(
+            logdir_path / "snapshots" / "final.model",
+            musibot_model_version=self.snapshot_version("final"),
+        )
 
     def evaluate(
         self,

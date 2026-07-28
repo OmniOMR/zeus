@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Literal, cast
@@ -161,9 +162,18 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         sys.exit(1)
 
     # create the logdir
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    # One `now()` for both stamps, so the logdir and the announced version
+    # cannot disagree about when this run started.
+    started_at = datetime.now()
+    timestamp = started_at.strftime("%y%m%d_%H%M%S")
     logdir_path = Path("logs", f"{experiment}-{timestamp}")
     logdir_path.mkdir(parents=True, exist_ok=True)
+
+    # The identity this run's snapshots announce to Musibot. The name is the
+    # experiment, so a fine-tuning run produces a different model rather than a
+    # new version of its parent; the version is when the run started, and each
+    # snapshot appends its own name to it (see Zeus.snapshot_version).
+    run_stamp = started_at.strftime("%Y-%m-%d-%H%M%S")
 
     # Set the random seed and the number of threads.
     tf.keras.utils.set_random_seed(seed)
@@ -215,8 +225,19 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         # Fine-tuning inherits what the snapshot says it reads, unless the
         # run is deliberately changing it.
         if input_subdivisions is not None:
-            zeus.model_options = ModelOptions(input_subdivisions=input_subdivisions)
+            zeus.model_options = replace(zeus.model_options, input_subdivisions=input_subdivisions)
+
+    # Always this run's own, never the parent's: a fine-tuned model that
+    # announced its parent's identity would collide with it in Musibot's
+    # registry, and the two would be treated as one model scaled out.
+    zeus.model_options = replace(
+        zeus.model_options,
+        musibot_model_name=experiment,
+        musibot_model_version=run_stamp,
+    )
+
     print("[Zeus]: The model reads:", ", ".join(zeus.model_options.input_subdivisions))
+    print(f"[Zeus]: Snapshots will announce themselves as {experiment} / {run_stamp}-*")
 
     # train the new model
     zeus.train(
