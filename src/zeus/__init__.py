@@ -73,6 +73,16 @@ promise, this is the lookup."""
 
 def __getattr__(name: str) -> Any:
     """Resolve one exported name, importing its module the first time."""
+    if name == "__version__":
+        # Read from the installed distribution rather than written down here,
+        # because the version comes from the git tags — see
+        # docs/versioning-and-releases.md.
+        import importlib.metadata
+
+        version = importlib.metadata.version("zeus")
+        globals()["__version__"] = version
+        return version
+
     module_name = _EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

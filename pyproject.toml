@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -8,9 +8,17 @@ packages = ["src/zeus"]
 [tool.hatch.metadata]
 allow-direct-references = true
 
+# The version is read from the git tags rather than written down here, so that
+# every commit builds as a distinct version — see docs/versioning-and-releases.md.
+# Zeus is a single package at the repository root, so unlike the Musibot
+# components this needs no `root`, no `--match` and no `tag_regex`:
+# setuptools-scm finds the repository here and strips a leading `v` itself.
+[tool.hatch.version]
+source = "vcs"
+
 [project]
 name = "zeus"
-version = "1.0.0-alpha1"
+dynamic = ["version"]
 authors = [
   { name="Jiří Mayer", email="mayer@ufal.mff.cuni.cz" },
 ]

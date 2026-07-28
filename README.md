@@ -35,6 +35,7 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 - [Training Zeus](docs/training-zeus.md)
 - [Python API](docs/python-api.md)
 - [Running Zeus as a Musibot model](docs/musibot-model.md)
+- [Versioning and releases](docs/versioning-and-releases.md)
 - Training on the UFAL LRC cluster
 - Visualizing training data
 - Visualizing model predictions
@@ -68,6 +69,8 @@ This is the command to install Zeus from this github repository at the latest co
 ```bash
 pip install 'zeus @ git+https://github.com/OmniOMR/zeus.git@main'
 ```
+
+Replace `main` with a release tag such as `v1.0.0` to pin a version. Every commit builds as a distinct version, so a plain `pip install` of a newer commit replaces what is there — see [Versioning and releases](docs/versioning-and-releases.md).
 
 Learn more about [VCS support](https://pip.pypa.io/en/stable/topics/vcs-support/) of `pip`.
 
