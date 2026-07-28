@@ -21,9 +21,9 @@ def define_parser(parser: argparse.ArgumentParser):
         "--architecture",
         required=True,
         type=str,
-        help="When training a new model, this argument specifies its "
-        + "architecture. Use 'grand24' for the grand staff model from 2024 "
-        + "and 'solo26' for the solo-staff model from 2026.",
+        help="Which architecture's input pipeline to visualize. The image "
+        + "height is an architecture setting, and it is what the images are "
+        + "normalized to. Use 'grand24' or 'solo26'.",
     )
     parser.add_argument(
         "--train",

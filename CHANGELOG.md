@@ -20,7 +20,7 @@ First release in preparation. Everything below is new relative to the code inher
 - **A public python API** — `from zeus import Zeus, InferenceOptions, …`. The names are resolved lazily, so `import zeus` costs nothing and does not import TensorFlow. See [Python API](docs/python-api.md).
 - **`--input-subdivisions` on `zeus train`**, required when training a new model, inherited from the snapshot when fine-tuning.
 - **`--sample-count` on `zeus visualize-predictions`**, which was fixed at 100.
-- Documentation: [Python API](docs/python-api.md), [Running Zeus as a Musibot model](docs/musibot-model.md), [Versioning and releases](docs/versioning-and-releases.md), and an account of what belongs in `architecture_options.yaml` versus `model_options.yaml`.
+- Documentation: [Python API](docs/python-api.md), [Running Zeus as a Musibot model](docs/musibot-model.md), [Versioning and releases](docs/versioning-and-releases.md), [Repository layout](docs/repository-layout.md), [Visualizing data and predictions](docs/visualizing-data-and-predictions.md), [Rough edges](docs/rough-edges.md), and an account of what belongs in `architecture_options.yaml` versus `model_options.yaml`.
 
 
 ### Changed

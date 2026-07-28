@@ -1,6 +1,6 @@
 # Zeus
 
-Zeus is a deep learning model for Optical Music Recognition (OMR): it reads an image of a staff or a grandstaff and produces the music notation on it, as LMX tokens and from those as MusicXML. The repository is a single python package that trains the model, stores and loads it as snapshots, and runs it for inference. See [README.md](README.md) and the [docs/](docs/) folder.
+Zeus is a deep learning model for Optical Music Recognition (OMR): it reads an image of a staff or a grandstaff and produces the music notation on it, as LMX tokens and from those as MusicXML. The repository is a single python package that trains the model, stores and loads it as snapshots, and runs it for inference. See [README.md](README.md) and the [docs/](docs/) folder; the folder structure is documented in [docs/repository-layout.md](docs/repository-layout.md).
 
 Zeus is also deployed as a *Model* inside [Musibot](https://github.com/OmniOMR/musibot), which runs it as a subprocess over a pipe protocol. Musibot's conventions are the ones this repository follows where the two overlap.
 

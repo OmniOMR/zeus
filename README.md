@@ -27,28 +27,35 @@ The package exposes the `zeus` CLI command, which should be used to work with th
 
 ## Documentation
 
+Using the model:
+
+- [Python API](docs/python-api.md)
+- [Model snapshots](docs/model-snapshots.md)
+- [Running Zeus as a Musibot model](docs/musibot-model.md)
+
+Training the model:
+
+- [Training Zeus](docs/training-zeus.md)
+- [Visualizing data and predictions](docs/visualizing-data-and-predictions.md)
+- Training on the UFAL LRC cluster — TODO
+
+Data:
+
 - [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
 - [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
 - [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
+
+Design and technical:
+
 - [Model architecture](docs/model-architecture.md)
-- [Model snapshots](docs/model-snapshots.md)
-- [Training Zeus](docs/training-zeus.md)
-- [Python API](docs/python-api.md)
-- [Running Zeus as a Musibot model](docs/musibot-model.md)
+- [Repository layout](docs/repository-layout.md)
 - [Versioning and releases](docs/versioning-and-releases.md)
-- Training on the UFAL LRC cluster
-- Visualizing training data
-- Visualizing model predictions
-- ...
-- TODO: Prediction, streaming
+- [Rough edges](docs/rough-edges.md)
 
 
 ## Existing snapshots
 
-... TODO ...
-- zeus olimpic / grandstaff from 2024
-- other snapshots published where ...
-- where experiments are recorded ...
+TODO — which trained snapshots are published, where they are downloaded from, and where the experiments behind them are recorded.
 
 
 ## Usage
