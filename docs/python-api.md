@@ -17,6 +17,7 @@ from zeus import Zeus, InferenceOptions, TrainingOptions, ZeusDataset
 | --- | --- |
 | `Zeus` | The model: weights and architecture. Loaded from a snapshot or created fresh, then trained, evaluated or run for inference. |
 | `ArchitectureOptions` | The sizes, dimensions and layer counts that define one architecture, such as `grand24` or `solo26`. |
+| `ModelOptions` | What a trained model reads, as opposed to how it computes — today, which [page subdivisions](model-snapshots.md#architecture-options-versus-model-options) it accepts. |
 | `TrainingOptions` | What a training run does: epochs, batch size, learning rate, augmentations. |
 | `InferenceOptions` | What an inference run does: batch size, image transformations, length and width limits. |
 | `TokenMap` | The mapping between model output indices and LMX tokens. Part of a snapshot, and inseparable from its weights. |
@@ -53,7 +54,7 @@ from zeus import Zeus
 model = Zeus.load(Path("models/zeus-olimpic-1.0-2024-02-12.model"))
 ```
 
-`Zeus.load` reads the architecture options and the token map out of the folder, builds the model, runs one dummy inference to materialize the decoder's weights, and only then loads the weights file. Snapshots from 2024 are detected and loaded correctly too.
+`Zeus.load` reads the architecture options, the model options and the token map out of the folder, builds the model, runs one dummy inference to materialize the decoder's weights, and only then loads the weights file. Snapshots from 2024 are detected and loaded correctly too.
 
 Storing works the same way round:
 
@@ -94,6 +95,7 @@ from pathlib import Path
 from zeus import (
     ArchitectureOptions,
     InferenceOptions,
+    ModelOptions,
     ShuffledView,
     TokenMap,
     TrainingOptions,
@@ -106,6 +108,7 @@ train_dataset = ZeusDataset.load_from_pickle_file(Path("datasets/omniomr/samples
 model = Zeus(
     architecture_options=ArchitectureOptions.from_well_known("solo26"),
     token_map=TokenMap.create_from_dataset(train_dataset.samples),
+    model_options=ModelOptions(input_subdivisions=["Staves"]),
 )
 
 model.train(

@@ -8,6 +8,7 @@ from typing import Literal, cast
 from ..data.shuffled_view import ShuffledView
 from ..model.architecture_options import ArchitectureOptions
 from ..model.inference_options import InferenceOptions
+from ..model.model_options import KNOWN_SUBDIVISIONS, ModelOptions
 from ..model.token_map import TokenMap
 from ..model.training_options import TrainingOptions
 
@@ -26,6 +27,19 @@ def define_parser(parser: argparse.ArgumentParser):
         type=str,
         help="Path to load a model from to refine instead of "
         + "training a new one, e.g. 'models/zeus-olimpic-1.0-2024-02-12.model'",
+    )
+    parser.add_argument(
+        "--input-subdivisions",
+        default=None,
+        type=str,
+        nargs="+",
+        choices=list(KNOWN_SUBDIVISIONS),
+        help="Which Musicorpus page subdivisions the trained model will be "
+        + "able to read, e.g. 'Staves' for a solo-staff model or "
+        + "'Grandstaves' for a piano model. Required when training a new "
+        + "model; when fine-tuning, defaults to whatever the loaded snapshot "
+        + "declares. This is stored in the snapshot and is what a Musibot "
+        + "worker announces, so it decides which images the model is sent.",
     )
     parser.add_argument(
         "--architecture",
@@ -113,6 +127,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     experiment = str(args.experiment)
     snapshot_path: Path | None = Path(args.model_snapshot) if args.model_snapshot else None
     architecture: str | None = str(args.architecture) if args.architecture else None
+    input_subdivisions: list[str] | None = (
+        list(args.input_subdivisions) if args.input_subdivisions else None
+    )
     train_pickle_paths = [Path(p) for p in args.train]
     augmentations = str(args.augment)
     dev_pickle_paths = [Path(p) for p in args.dev]
@@ -132,6 +149,15 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     if architecture is None and snapshot_path is None:
         print("Specify either the --model-snapshot or --architecture arguments,")
         print("i.e, you must either load a model or train a new one.")
+        sys.exit(1)
+
+    # A new model has nothing to inherit this from, and getting it wrong is
+    # not an error anyone would notice later: the snapshot would simply
+    # announce that it reads something it was never trained on.
+    if snapshot_path is None and input_subdivisions is None:
+        print("Specify --input-subdivisions when training a new model,")
+        print("i.e. which page subdivisions it will be able to read.")
+        print("Choose from:", ", ".join(KNOWN_SUBDIVISIONS))
         sys.exit(1)
 
     # create the logdir
@@ -177,13 +203,20 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     # create new or load an existing model
     if snapshot_path is None:
         assert architecture is not None
+        assert input_subdivisions is not None
         architecture_options = ArchitectureOptions.from_well_known(architecture)
         zeus = Zeus(
             architecture_options=architecture_options,
             token_map=TokenMap.create_from_dataset(train_dataset.samples),
+            model_options=ModelOptions(input_subdivisions=input_subdivisions),
         )
     else:
         zeus = Zeus.load(snapshot_path)
+        # Fine-tuning inherits what the snapshot says it reads, unless the
+        # run is deliberately changing it.
+        if input_subdivisions is not None:
+            zeus.model_options = ModelOptions(input_subdivisions=input_subdivisions)
+    print("[Zeus]: The model reads:", ", ".join(zeus.model_options.input_subdivisions))
 
     # train the new model
     zeus.train(

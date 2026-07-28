@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from zeus.data.zeus_dataset import ZeusDataset, ZeusDatasetSample
     from zeus.model.architecture_options import ArchitectureOptions
     from zeus.model.inference_options import InferenceOptions
+    from zeus.model.model_options import ModelOptions
     from zeus.model.token_map import TokenMap
     from zeus.model.training_options import TrainingOptions
     from zeus.model.zeus import Zeus
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
 __all__ = [
     "ArchitectureOptions",
     "InferenceOptions",
+    "ModelOptions",
     "ShuffledView",
     "TokenMap",
     "TrainingOptions",
@@ -56,6 +58,7 @@ __all__ = [
 _EXPORTS = {
     "ArchitectureOptions": "zeus.model.architecture_options",
     "InferenceOptions": "zeus.model.inference_options",
+    "ModelOptions": "zeus.model.model_options",
     "ShuffledView": "zeus.data.shuffled_view",
     "TokenMap": "zeus.model.token_map",
     "TrainingOptions": "zeus.model.training_options",

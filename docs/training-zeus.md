@@ -14,6 +14,7 @@ To replicate the Camera GrandStaff model, use the following command:
 zeus train \
     --experiment zeus-camera-grandstaff-replication \
     --architecture grand24 \
+    --input-subdivisions Grandstaves \
     --train datasets/grandstaff/samples_distorted.train.pickle \
     --augment "h:8,rotate:1,v:4,de,en3:0.2,n:0.01,c:-1:1,b:-0.5:0.2" \
     --dev datasets/grandstaff/samples_distorted.dev.pickle \
@@ -60,6 +61,8 @@ zeus train \
 The `--experiment` argument provides name of the current training run (experiment), for use in tensorboard and logs.
 
 Then you specify the model to be used. Either load an existing model snapshot via the `--model-snapshot` path, or specify the architecture to use for a new model via the `--architecture` argument. See the previous two sections for example values.
+
+A new model also needs `--input-subdivisions`, which says which [Musicorpus page subdivisions](model-snapshots.md#architecture-options-versus-model-options) it will be trained to read — `Staves` for a solo-staff model, `Grandstaves` for a piano model, `Systems` for a whole system, or several of them for a model trained on more than one. It is stored in the snapshot, and it is what a Musibot worker announces, so it decides which images the deployed model is sent. Fine-tuning inherits it from the loaded snapshot, and passing it anyway overrides it.
 
 Then you specify the training dataset(s) via one or many `--train` arguments. If many, then they are are concatenated and shuffled into one big training dataset. This may simulate fine-tuning with replay when the old training dataset is also included in the fine-tuning training process. Provide multiple values to a single `--train` option, not multiple `--train` options (that would cause only the last one to be loaded).
 

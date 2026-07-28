@@ -11,6 +11,7 @@ from .architecture_options import ArchitectureOptions
 from .construct_tf_dataset import construct_tf_dataset, construct_tf_dataset_for_images
 from .inference_options import InferenceOptions
 from .keras_model import KerasModel
+from .model_options import ModelOptions
 from .token_map import TokenMap
 from .training_options import TrainingOptions
 
@@ -21,7 +22,12 @@ class Zeus:
     Can be trained or used for inference.
     """
 
-    def __init__(self, architecture_options: ArchitectureOptions, token_map: TokenMap):
+    def __init__(
+        self,
+        architecture_options: ArchitectureOptions,
+        token_map: TokenMap,
+        model_options: ModelOptions | None = None,
+    ):
         """Creates a fresh, initialized and untrained model instance."""
 
         self.architecture_options = architecture_options
@@ -29,6 +35,9 @@ class Zeus:
 
         self.token_map = token_map
         """Defines the mapping between model outputs and LMX tokens"""
+
+        self.model_options = model_options if model_options is not None else ModelOptions()
+        """Says what this model reads, as opposed to how it computes"""
 
         strategy_scope = (
             tf.distribute.MirroredStrategy().scope()
@@ -69,7 +78,12 @@ class Zeus:
         """Loads a model from its folder"""
         architecture_options = ArchitectureOptions.from_model_folder(model_folder_path)
         token_map = TokenMap.load_from_model_folder(model_folder_path)
-        zeus = Zeus(architecture_options=architecture_options, token_map=token_map)
+        model_options = ModelOptions.from_model_folder(model_folder_path)
+        zeus = Zeus(
+            architecture_options=architecture_options,
+            token_map=token_map,
+            model_options=model_options,
+        )
 
         zeus.materialize_weights()
 
@@ -109,6 +123,9 @@ class Zeus:
 
         # architecture options
         self.architecture_options.write_to_model_folder(model_folder_path)
+
+        # model options
+        self.model_options.write_to_model_folder(model_folder_path)
 
         # token map
         self.token_map.write_to_model_folder(model_folder_path)
