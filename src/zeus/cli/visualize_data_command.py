@@ -55,7 +55,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
     # deffered import since it imports tensorflow which is slow
-    from ..model.zeus import Zeus
+    from ..visualization.visualize_training_data import visualize_training_data
 
     # prepare CLI arguments
     # Required by the parser, so it is always present.
@@ -79,16 +79,10 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         seed=seed,
     )
 
-    # new dummy model to run the visualization with
-    # TODO: visualization should be extracted out from the Zeus class
-    zeus = Zeus(
+    visualize_training_data(
+        shuffled_train_dataset=shuffled_train_dataset,
         architecture_options=ArchitectureOptions.from_well_known(architecture),
         token_map=TokenMap.create_from_dataset(train_dataset.samples),
-    )
-
-    # train the new model
-    zeus.visualize_training_data(
-        shuffled_train_dataset=shuffled_train_dataset,
         training_options=TrainingOptions(
             epochs=0,
             evaluation_from=0,
