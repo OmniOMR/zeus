@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# shortcut bash script for running tensorboard
-#
-# make this executable by:
-#   chmod +x ./tensorboard
-
-.venv/bin/tensorboard --logdir logs --port 16006

@@ -10,54 +10,6 @@
 Zeus is a deep learning model for reading staves and grandstaves of music notation. This repository is structured as a python package that lets you train Zeus, save and load it from checkpoints and use it for inference.
 
 
-## CLI
-
-The package exposes the `zeus` CLI command, which should be used to work with the model:
-
-- `zeus` **`musicorpus`** [`--help`](docs/converting-musicorpus-datasets-to-zeus-format.md): Converts a [MusiCorpus](https://github.com/OmniOMR/musicorpus) dataset to Zeus dataset.
-- `zeus` **`render`** [`--help`](docs/zeus-dataset-format-and-pickling.md#rendering-musicxml-samples): Renders one Zeus dataset split via MuseScore to B/W images. Uses MusicXML files as input.
-- `zeus` **`pickle`** [`--help`](docs/zeus-dataset-format-and-pickling.md#pickling): Bundles one Zeus dataset split into a pickle file for faster loading on the compute cluster.
-- `zeus` **`train`** [`--help`](docs/training-zeus.md): Trains a Zeus model, both new or loaded.
-- `zeus` **`evaluate`** `--help`: Performs symbol error rate evaluation on LMX against the given dataset split.
-- `zeus` **`visualize-data`** `--help`: Renders training data, as the model sees it, into a browsable HTML page.
-- `zeus` **`visualize-predictions`** `--help`: Renders the output of `evaluate` beside its gold data, ordered by symbol error rate.
-- `zeus` **`predict`** `--help`: Reads music notation off staff images and writes MusicXML transcriptions.
-- `zeus` **`musibot`** [`--help`](docs/musibot-model.md): Runs Zeus as a [Musibot](https://github.com/OmniOMR/musibot) model, driven by a worker head over pipes.
-
-
-## Documentation
-
-Using the model:
-
-- [Python API](docs/python-api.md)
-- [Model snapshots](docs/model-snapshots.md)
-- [Running Zeus as a Musibot model](docs/musibot-model.md)
-
-Training the model:
-
-- [Training Zeus](docs/training-zeus.md)
-- [Visualizing data and predictions](docs/visualizing-data-and-predictions.md)
-- Training on the UFAL LRC cluster — TODO
-
-Data:
-
-- [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
-- [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
-- [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
-
-Design and technical:
-
-- [Model architecture](docs/model-architecture.md)
-- [Repository layout](docs/repository-layout.md)
-- [Versioning and releases](docs/versioning-and-releases.md)
-- [Rough edges](docs/rough-edges.md)
-
-
-## Existing snapshots
-
-TODO — which trained snapshots are published, where they are downloaded from, and where the experiments behind them are recorded.
-
-
 ## Usage
 
 You have two ways how to use Zeus for your project:
@@ -71,7 +23,7 @@ In other words, if you can't afford to have your project on Python 3.10, you mus
 from zeus import Zeus, InferenceOptions
 ```
 
-This is the command to install Zeus from this github repository at the latest commit:
+This is the command to install Zeus from this GitHub repository at the latest commit:
 
 ```bash
 pip install 'zeus @ git+https://github.com/OmniOMR/zeus.git@main'
@@ -82,29 +34,62 @@ Replace `main` with a release tag such as `v1.0.0` to pin a version. Every commi
 Learn more about [VCS support](https://pip.pypa.io/en/stable/topics/vcs-support/) of `pip`.
 
 
-## Development
+## Existing snapshots
 
-Clone this repo, create a venv, install the package into it and activate the venv to get the `zeus` CLI command.
+This is a list of known Zeus model snapshots available for download:
 
-This code requires `Python 3.10.7`, because the old version of TensorFlow needs it.
+- Latest solo-staff 2026 experiments (TODO license)
+    - `[2024-07-10]` **`zod-bw-auth-2024-07-10.model`** (TODO) trained on Dolores
+    - `[2024-07-10]` **`zod-bw-auth-ft-2024-07-10.model`** (TODO) trained on Dolores, finetuned on OmniOMR
+- Original 2024 grandstaff B/W models ([code](https://github.com/ufal/olimpic-icdar24/releases), [paper](https://doi.org/10.1007/978-3-031-70552-6_4)) (CC BY-SA licenses)
+    - `[2024-02-12]` **`zeus-camera-grandstaff-lmx-1.0-2024-02-12.model`** ([download](https://github.com/ufal/olimpic-icdar24/releases/download/grandstaff-models/zeus-camera-grandstaff-lmx-1.0-2024-02-12.model.tar.gz), [url](https://github.com/ufal/olimpic-icdar24/releases/tag/grandstaff-models)) trained on Camera GrandStaff
+    - `[2024-02-12]` **`zeus-grandstaff-lmx-1.0-2024-02-12.model`** ([download](https://github.com/ufal/olimpic-icdar24/releases/download/grandstaff-models/zeus-grandstaff-lmx-1.0-2024-02-12.model.tar.gz), [url](https://github.com/ufal/olimpic-icdar24/releases/tag/grandstaff-models)) trained on GrandStaff
+    - `[2024-02-12]` **`zeus-olimpic-1.0-2024-02-12.model`** ([download](https://github.com/ufal/olimpic-icdar24/releases/download/zeus-release/zeus-olimpic-1.0-2024-02-12.model.tar.gz), [url](https://github.com/ufal/olimpic-icdar24/releases/tag/zeus-release)) trained on OLiMPiC
 
-```bash
-# clone
-git clone git@github.com:OmniOMR/zeus.git
-cd zeus
 
-# make venv
-python3.10 -m venv .venv
+## CLI
 
-# install itself
-.venv/bin/pip3 install -e .
+The package exposes the `zeus` CLI command, which should be used to work with the model:
 
-# activate venv
-source .venv/bin/activate
+- `zeus` **`train`** [`--help`](docs/training-zeus.md): Trains a Zeus model, both new or loaded.
+- `zeus` **`evaluate`** [`--help`](docs/using-the-cli.md#evaluating-a-snapshot-against-a-dataset): Performs symbol error rate evaluation on LMX against the given dataset split.
+- `zeus` **`predict`** [`--help`](docs/using-the-cli.md#transcribing-images): Reads music notation off staff images and writes MusicXML transcriptions.
+- `zeus` **`musibot`** [`--help`](docs/musibot-model.md): Runs Zeus as a [Musibot](https://github.com/OmniOMR/musibot) model, driven by a worker head over pipes.
+- `zeus` **`visualize-data`** [`--help`](docs/visualizing-data-and-predictions.md): Renders training data, as the model sees it, into a browsable HTML page.
+- `zeus` **`visualize-predictions`** [`--help`](docs/visualizing-data-and-predictions.md): Renders the output of `evaluate` beside its gold data, ordered by symbol error rate.
+- `zeus` **`pickle`** [`--help`](docs/zeus-dataset-format-and-pickling.md#pickling): Bundles one Zeus dataset split into a pickle file for faster loading on the compute cluster.
+- `zeus` **`musicorpus`** [`--help`](docs/converting-musicorpus-datasets-to-zeus-format.md): Converts a [MusiCorpus](https://github.com/OmniOMR/musicorpus) dataset to Zeus dataset.
+- `zeus` **`render`** [`--help`](docs/zeus-dataset-format-and-pickling.md#rendering-musicxml-samples): Renders one Zeus dataset split via MuseScore to B/W images. Uses MusicXML files as input.
 
-# now you can run CLI commands with the local code
-zeus --help
-```
+
+## Documentation
+
+Using the model:
+
+- [Using the CLI](docs/using-the-cli.md)
+- [Python API](docs/python-api.md)
+- [Model snapshots](docs/model-snapshots.md)
+- [Running Zeus as a Musibot model](docs/musibot-model.md)
+
+Training the model:
+
+- [Training Zeus](docs/training-zeus.md)
+- [Visualizing data and predictions](docs/visualizing-data-and-predictions.md)
+- [Training on the UFAL LRC cluster](docs/training-on-lrc.md)
+
+Data:
+
+- [MusicXML, LMX and tokenization](docs/musicxml-lmx-and-tokenization.md)
+- [Zeus dataset format and pickling](docs/zeus-dataset-format-and-pickling.md)
+- [Converting MusiCorpus datasets to Zeus format](docs/converting-musicorpus-datasets-to-zeus-format.md)
+
+Design and technical:
+
+- [Development](docs/development.md)
+- [Model architecture](docs/model-architecture.md)
+- [Repository layout](docs/repository-layout.md)
+- [Versioning and releases](docs/versioning-and-releases.md)
+- [Rough edges](docs/rough-edges.md)
 
 
 ## How to cite

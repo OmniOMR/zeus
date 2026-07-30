@@ -8,6 +8,7 @@ The snapshot folder contains the following files:
 - `model_options.yaml` What the model reads, see the `ModelOptions` class and [the section below](#architecture-options-versus-model-options).
 - `token_map.txt` A map between string token names and token indices used in the model's embedding layer. Line number is the index and its content is the token name.
 - `weights.h5` weights of the tensorflow model.
+- `LICENSE` optional license file, must be added manually when publishing a snapshot.
 
 There is also a legacy representation from 2024, however the loading function will detect it and load appropriately.
 

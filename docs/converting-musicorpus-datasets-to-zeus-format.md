@@ -20,7 +20,7 @@ The conversion requires these files to be present in the input MusiCorpus datase
 
 The output is a new folder containing the Zeus representation of the extracted data, e.g. `my-dataset`. It contains the `samples.{split}.txt` files and the `samples` folder with images, MusicXML and LMX. The command performs necessary semantic corrections of MusicXML as described in [MusicXML, LMX and tokenization](musicxml-lmx-and-tokenization.md) documentation page. The output dataset also getes a `samples.all.txt` file with all samples extracted from the dataset, if splits are not to be used.
 
-The command must be instructed to take either staves or grandstaves as samples, or possible both, by usigin these two toggles:
+The command must be instructed to take either staves or grandstaves as samples, or possibly both, by usigin these two toggles:
 
 ```
 --take-staves

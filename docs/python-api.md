@@ -2,7 +2,7 @@
 
 Zeus is a python package as well as a command line tool. If your project runs on python 3.10, you can drive the model directly instead of shelling out to the CLI — the CLI is a thin layer over exactly these calls.
 
-If your project cannot be on python 3.10, use [the CLI](../README.md#cli) instead. The constraint is TensorFlow 2.12, which has no wheels for anything newer, and it is not one Zeus can lift on its own.
+If your project cannot be on python 3.10, use [the CLI](using-the-cli.md) instead. The constraint is TensorFlow 2.12, which has no wheels for anything newer, and it is not one Zeus can lift on its own.
 
 
 ## The public surface

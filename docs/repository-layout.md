@@ -11,6 +11,7 @@ zeus/
   models/            generated — model snapshots
   logs/              generated — training runs, tensorboard, evaluations
   out/               generated — visualizations and predictions
+  musescore/         generated — `zeus render` command downloads MuseScore here
 ```
 
 The four generated folders are gitignored, and are where the CLI writes by default. They are relative to the working directory, so Zeus commands are normally run from the repository root.

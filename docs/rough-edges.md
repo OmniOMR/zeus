@@ -49,8 +49,3 @@ Images wider than `max_image_width` at the architecture's height are compressed 
 ## `zeus predict` writes beside its input
 
 By default each transcription lands next to the image it came from, which is convenient for a folder of staves and surprising if the input folder is meant to be read-only. `--output-dir` redirects it. There is no way to write to standard output.
-
-
-## Training on the compute cluster is undocumented
-
-Running Zeus on the UFAL LRC cluster — how jobs are submitted, what the GPU and memory requests should look like, where datasets live — is knowledge that exists but is not written down here. The README links a section that does not yet exist.

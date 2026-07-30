@@ -94,7 +94,7 @@ When you run training, it creates a folder `logs/{experiment-name}-{timestamp}` 
 
 - `train/` Tensorboard events are logged into this folder
 - `snapshots/` Contains one model snapshot for each evaluated epoch
-- `evaluation/` Contains evaluation results for all evaluated epoch and the final epoch.
+- `evaluation/` Contains evaluation results for all evaluated epochs and the final epoch.
     - `e5-{eval_dataset_name}.yaml` evaluation metrics for a dataset at epoch 5
     - `e5-{eval_dataset_name}.lmx` evaluation predictions for a dataset at epoch 5 (one sample on one line)
 - `training_options.yaml` The training options used for the training process.
