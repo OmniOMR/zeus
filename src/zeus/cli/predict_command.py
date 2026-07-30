@@ -37,6 +37,14 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Also write the raw LMX token string beside each MusicXML file",
     )
     parser.add_argument(
+        "--no-musicxml",
+        default=False,
+        action="store_true",
+        help="Skip decoding the prediction into MusicXML and writing it. "
+        + "Only useful together with --lmx, since otherwise nothing is "
+        + "written at all.",
+    )
+    parser.add_argument(
         "--batch-size",
         default=16,
         type=int,
@@ -65,7 +73,14 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     snapshot_path = Path(args.model_snapshot)
     output_dir: Path | None = Path(args.output_dir) if args.output_dir else None
     also_write_lmx = bool(args.lmx)
+    write_musicxml = not bool(args.no_musicxml)
     batch_size = int(args.batch_size)
+
+    # Refused rather than run, because the alternative is loading a model,
+    # transcribing everything and writing nothing — which looks like success.
+    if not write_musicxml and not also_write_lmx:
+        print("--no-musicxml leaves nothing to write; pass --lmx as well.")
+        sys.exit(2)
 
     # Checked before the model is loaded, which takes seconds, so that a typo
     # in a path is reported immediately rather than after the wait.
@@ -98,6 +113,9 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             lmx_path = destination / (image_path.stem + ".lmx")
             lmx_path.write_text(lmx + "\n", encoding="utf-8")
             print("Wrote", lmx_path)
+
+        if not write_musicxml:
+            continue
 
         try:
             musicxml = lmx_to_musicxml(lmx)

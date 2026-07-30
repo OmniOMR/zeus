@@ -15,7 +15,7 @@ First release in preparation. Everything below is new relative to the code inher
 ### Added
 
 - **`zeus musibot`** — runs Zeus as a [Musibot](https://github.com/OmniOMR/musibot) *Model*, speaking the worker IPC contract (`ipc_version` 1) over the two file descriptors a *Worker Head* provides. Batching is supported, so one `execute-batch` fills a single forward pass. Transcriptions are written beside the image they came from, as `transcription.musicxml` and `transcription.lmx`. See [Running Zeus as a Musibot model](docs/musibot-model.md).
-- **`zeus predict`** — reads music notation off staff images and writes MusicXML. `Zeus.predict` previously raised `NotImplementedError`, and every path that ran the model required gold LMX for every sample.
+- **`zeus predict`** — reads music notation off staff images and writes MusicXML, or the raw LMX tokens with `--lmx`, or only those with `--lmx --no-musicxml`. `Zeus.predict` previously raised `NotImplementedError`, and every path that ran the model required gold LMX for every sample.
 - **`model_options.yaml` in a snapshot** — declares which Musicorpus page subdivisions the model reads (`Staves`, `Grandstaves`, `Systems`), and the name and version it announces to Musibot. Snapshots written before this file existed read as `Grandstaves`, and can be corrected by writing the file into the folder by hand rather than retraining. See [Model snapshots](docs/model-snapshots.md).
 - **A public python API** — `from zeus import Zeus, InferenceOptions, …`. The names are resolved lazily, so `import zeus` costs nothing and does not import TensorFlow. See [Python API](docs/python-api.md).
 - **`--input-subdivisions` on `zeus train`**, required when training a new model, inherited from the snapshot when fine-tuning.

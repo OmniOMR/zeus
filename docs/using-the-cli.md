@@ -60,6 +60,24 @@ Wrote scans/grandstaff-2.musicxml
 
 `--output-dir out/transcriptions` sends them elsewhere instead, and `--lmx` writes the raw [LMX](musicxml-lmx-and-tokenization.md) token sequence beside each MusicXML file — the model's actual output, before it was turned into MusicXML. Reach for that when a transcription looks wrong, because a decoding problem is invisible in the MusicXML.
 
+Adding `--no-musicxml` on top of `--lmx` gives you the tokens and nothing else:
+
+```bash
+zeus predict \
+    --model-snapshot models/solo26.model \
+    --lmx --no-musicxml \
+    --quiet-tf \
+    scans/*.jpg
+```
+
+That is what you want when LMX is what you were after — comparing two models' raw output, feeding a script that reads tokens, or measuring a model against gold LMX by hand. It also skips the decoder entirely, so a prediction that MusicXML conversion would choke on still comes out; see [below](#when-a-staff-cannot-be-read).
+
+`--no-musicxml` on its own is refused rather than run, since it would load the model, transcribe everything and write nothing:
+
+```
+--no-musicxml leaves nothing to write; pass --lmx as well.
+```
+
 **Each image must be a single staff or grandstaff**, cropped and roughly deskewed. Zeus reads one system at a time; handed a whole page it will not complain, it will transcribe the page as though it were one staff and return nonsense. Finding and cropping the staves on a page is a different model's job — which is what [Musibot pipelines](musibot-model.md) exist to string together.
 
 
@@ -86,6 +104,8 @@ Wrote scans/staff-4.musicxml
 ```
 
 The command exits with status 1 if anything failed, so a script can notice, while everything that did work has still been written. With `--lmx` the failed image's tokens are on disk too, which is when you most want them.
+
+Note that this failure is in the *decoding*, not in the model — the model predicted something, it just was not a token sequence that describes valid notation. So `--lmx --no-musicxml` never hits it: nothing is decoded, every image produces its `.lmx`, and the command exits 0. That makes it the mode to use when you want the model's output whatever it turns out to be, rather than only the output that survives conversion.
 
 
 ## Evaluating a snapshot against a dataset
