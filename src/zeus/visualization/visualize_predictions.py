@@ -11,7 +11,7 @@ import random
 from pathlib import Path
 
 from ..data.zeus_dataset import ZeusDataset
-from ..evaluation.ser_metric import ser_metric
+from ..evaluation.metrics import SER
 
 
 def visualize_predictions(
@@ -60,7 +60,7 @@ def visualize_predictions(
         sample = dataset.samples[sample_index]
         gold_lmx: str = sample.lmx
         pred_lmx: str = predictions_lmx[sample_index]
-        ser: float = ser_metric(gold=[gold_lmx], pred=[pred_lmx])["SER"]
+        ser: float = SER.compute([gold_lmx], [pred_lmx])
         items.append((sample_index, sample.image, gold_lmx, pred_lmx, ser))
 
     items.sort(key=lambda item: item[4])

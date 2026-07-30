@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 from ..data.shuffled_view import ShuffledView
+from ..evaluation.metrics import ALL_METRICS, parse_metric_names
 from ..model.architecture_options import ArchitectureOptions
 from ..model.inference_options import InferenceOptions
 from ..model.model_options import KNOWN_SUBDIVISIONS, ModelOptions
@@ -86,6 +87,16 @@ def define_parser(parser: argparse.ArgumentParser):
         "--evaluation-each", type=int, default=1, help="Run evaluation each this number of epochs"
     )
     parser.add_argument(
+        "--metrics",
+        default=None,
+        type=str,
+        help="Comma-separated list of metrics to compute, e.g. "
+        + "'SER,SERpitchonly'. Defaults to SER alone. "
+        + "Available: "
+        + ", ".join(ALL_METRICS)
+        + ".",
+    )
+    parser.add_argument(
         "--batch-size", default=64, type=int, help="Number of samples per batch when doing training"
     )
     parser.add_argument(
@@ -145,6 +156,11 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     lr_decay = cast(Literal["none", "cos"], str(args.lr_decay))
     seed = int(args.seed)
     threads = int(args.threads)
+    try:
+        metrics = parse_metric_names(args.metrics) if args.metrics else None
+    except ValueError as error:
+        print(error)
+        sys.exit(2)
 
     # either load or create a model
     if architecture is None and snapshot_path is None:
@@ -260,4 +276,5 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             transformations=[],
         ),
         logdir_path=logdir_path,
+        metrics=metrics,
     )

@@ -39,11 +39,12 @@ class ZeusDatasetSample:
     Single-line, tokens separated by spaces. No newlines.
     """
 
-    musicxml: str | None
-    """
-    XML string loaded from the .musicxml file.
-    May be None as it's only needed for MusicXML-based evaluation.
-    """
+    # There used to be a `musicxml` field here, carried so that MusicXML-level
+    # evaluation could read it; that evaluation belongs to a benchmarking rig
+    # rather than to this repository, and nothing here ever read the field.
+    # Pickles written while it existed still load — pickle restores a dataclass
+    # through its `__dict__`, so the stale attribute simply rides along and is
+    # ignored. That would stop being true if this became a slots dataclass.
 
     def __postinit__(self):
         assert Path(self.sample_name).as_posix() == self.sample_name
@@ -94,7 +95,6 @@ class ZeusDataset:
     def load_from_samples_file(
         samples_file_path: Path,
         image_suffix: str,
-        with_musicxml: bool,
         show_progress_bar: bool = False,
         benevolent: bool = False,
     ) -> "ZeusDataset":
@@ -107,7 +107,6 @@ class ZeusDataset:
         :param samples_file_path: Path to the samples.split.txt file.
         :param image_suffix: Paths to images may be suffixed to load
             e.g. camera grandstaff LMX dataset.
-        :param with_musicxml: Whether to load MusicXML files as well or not.
         :param show_progress_bar: Whether to show a tqdm progress bar while loading.
         :param benevolent: Skip samples with missing images without raising.
         """
@@ -137,17 +136,11 @@ class ZeusDataset:
                 # load lmx
                 lmx = sample.path.with_suffix(".lmx").read_text(encoding="utf-8").rstrip("\r\n")
 
-                # load musicxml
-                musicxml: str | None = None
-                if with_musicxml:
-                    musicxml = sample.path.with_suffix(".musicxml").read_text(encoding="utf-8")
-
                 zeus_dataset_samples.append(
                     ZeusDatasetSample(
                         sample_name=sample.name,
                         image=image,
                         lmx=lmx,
-                        musicxml=musicxml,
                     )
                 )
 

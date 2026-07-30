@@ -19,11 +19,11 @@ An LMX string with tokens before its first `measure` makes the pinned `lmx` rele
 Zeus does not propagate it: `lmx_to_musicxml` raises `LmxDecodingError` carrying the offending LMX, and callers fail that one sample. But the message a user sees still ends in `'str' object has no attribute 'terminal'`, which explains nothing. The fix is one line in [lmx](https://github.com/OMR-Research/lmx) and a bump of the pin in `pyproject.toml`.
 
 
-## MusicXML-level evaluation does not exist
+## Evaluation is LMX-only, by design
 
-`zeus pickle --with-musicxml` stores each sample's MusicXML in the pickle, and `ZeusDatasetSample.musicxml` carries it into memory, but nothing reads it. It is there for TEDn — a tree edit distance over the MusicXML rather than over the token sequence — which is not implemented.
+Zeus measures models by symbol error rate over LMX tokens, which is sensitive to how the notation was linearized: two transcriptions a musician would call equivalent can differ in LMX, and SER counts that as error.
 
-So evaluation today is symbol error rate on LMX, which is sensitive to how the notation was linearized. Two transcriptions that a musician would call equivalent can differ in LMX, and SER counts that as error. Until TEDn exists, treat SER as a training signal rather than as a claim about musical correctness.
+Measuring at the MusicXML level instead — a tree edit distance or similar — needs decoding and is expensive, so it lives in a separate benchmarking rig run after a model is trained rather than here. That is a deliberate boundary rather than a gap, but it does mean nothing in this repository can tell you how musically correct a model is. See [Evaluation metrics](evaluation-metrics.md).
 
 
 ## `zeus musicorpus` cannot re-crop or rescale

@@ -1,7 +1,9 @@
 import argparse
+import sys
 from datetime import datetime
 from pathlib import Path
 
+from ..evaluation.metrics import ALL_METRICS, parse_metric_names
 from ..model.inference_options import InferenceOptions
 
 NAME = "evaluate"
@@ -28,6 +30,16 @@ def define_parser(parser: argparse.ArgumentParser):
         help="Path to the output folder where evaluation " + "results willl be written",
     )
     parser.add_argument(
+        "--metrics",
+        default=None,
+        type=str,
+        help="Comma-separated list of metrics to compute, e.g. "
+        + "'SER,SERpitchonly'. Defaults to SER alone. "
+        + "Available: "
+        + ", ".join(ALL_METRICS)
+        + ".",
+    )
+    parser.add_argument(
         "--batch-size",
         default=64,
         type=int,
@@ -45,6 +57,11 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     dataset_pickle_path = Path(args.dataset)
     output_path = Path(args.output)
     batch_size = int(args.batch_size)
+    try:
+        metrics = parse_metric_names(args.metrics) if args.metrics else None
+    except ValueError as error:
+        print(error)
+        sys.exit(2)
 
     # load the dataset
     dataset = ZeusDataset.load_from_pickle_file(dataset_pickle_path)
@@ -56,6 +73,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         dataset=dataset,
         inference_options=InferenceOptions(batch_size=batch_size),
         with_progress_bar=True,
+        metrics=metrics,
         write_predictions_to=output_path / "predictions.lmx",
         write_metrics_to=output_path / "metrics.yaml",
     )

@@ -87,7 +87,7 @@ Optionally, samples may contain `.musicxml` data files. These MusicXML files sho
 
 These files are optional, but for the whole dataset. Either all samples should have it, or all files should miss it.
 
-Its only purpose is to allow for MusicXML-to-MusicXML evaluation, such as tree edit distance, musicdiff, or music tree notation. It is not used for model training nor inference.
+They are not used for model training nor inference, and are deliberately not carried into the pickles — Zeus is LMX-first, and evaluation at the MusicXML level belongs to a separate benchmarking rig (see [Evaluation metrics](evaluation-metrics.md)). Two things in this repository do read them: `zeus render`, which engraves sample images from them through MuseScore, and whatever you use them for outside it.
 
 
 ## Pickling

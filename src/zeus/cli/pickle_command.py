@@ -25,12 +25,6 @@ def define_parser(parser: argparse.ArgumentParser):
         + "'_distorted' suffix.",
     )
     parser.add_argument(
-        "--with-musicxml",
-        default=False,
-        action="store_true",
-        help="Include MusicXML data in the pickle, only needed " + "for TEDn evaluation.",
-    )
-    parser.add_argument(
         "--benevolent",
         default=False,
         action="store_true",
@@ -42,7 +36,6 @@ def define_parser(parser: argparse.ArgumentParser):
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     samples_path = Path(args.samples_file_path)
     image_suffix = str(args.image_suffix)
-    with_musicxml = bool(args.with_musicxml)
     benevolent = bool(args.benevolent)
 
     if not samples_path.exists():
@@ -52,7 +45,6 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     dataset = ZeusDataset.load_from_samples_file(
         samples_file_path=samples_path,
         image_suffix=image_suffix,
-        with_musicxml=with_musicxml,
         show_progress_bar=True,
         benevolent=benevolent,
     )

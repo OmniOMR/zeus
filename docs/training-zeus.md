@@ -72,6 +72,8 @@ For evaluation (continuous and terminal) specify the validation and evaluation d
 
 Training always happens for a fixed number of epochs, `--epochs` specifies their number. If you want to simulate early stopping, simply observer validation loss curves and then pick the appropriate model snapshot. Model weights are saved after each evaluated epoch to allow for this time-travelling. If unsure, set the epoch count higher then you expect, you can always kill the process and use whichever snapshot is the latest.
 
+Which metrics the evaluations report is chosen with `--metrics`, a comma-separated list such as `SER,SERpitchonly`. It defaults to `SER` alone, and each metric becomes its own tensorboard curve named after the dataset and the metric. See [Evaluation metrics](evaluation-metrics.md).
+
 Batch size is specified via `--batch-size`, use the highest that fits into GPU memory.
 
 Learning rate is specified via `--learning-rate`, which may have a cosine decay if `--lr-decay cos` is used, otherwise the learning rate is constant.

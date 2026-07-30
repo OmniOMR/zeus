@@ -75,6 +75,7 @@ Training the model:
 
 - [Training Zeus](docs/training-zeus.md)
 - [Augmentations](docs/augmentations.md)
+- [Evaluation metrics](docs/evaluation-metrics.md)
 - [Visualizing data and predictions](docs/visualizing-data-and-predictions.md)
 - [Training on the UFAL LRC cluster](docs/training-on-lrc.md)
 

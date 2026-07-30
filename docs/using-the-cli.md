@@ -122,16 +122,28 @@ zeus evaluate \
 That writes two files into the output folder:
 
 - `predictions.lmx` — one predicted LMX string per sample, in the dataset's order.
-- `metrics.yaml` — the symbol error rates.
+- `metrics.yaml` — the numbers.
 
 ```
 SER: 4.123
-SERnotuplets: 3.870
 ```
 
-`SER` is the symbol error rate over LMX tokens: the edit distance between predicted and gold, as a percentage of gold length. `SERnotuplets` is the same with tuplet tokens excluded, since tuplets are both rare and easy to get wrong, and can dominate the first number.
+`SER` is the symbol error rate over LMX tokens: the edit distance between predicted and gold, summed over the corpus, as a percentage of the gold length. It is the default and usually the only one you want.
 
-Both are computed on the token sequence rather than on the music, so they are sensitive to how the notation was linearized — two transcriptions a musician would call equivalent can differ in LMX and be counted as error. Treat SER as a training signal rather than as a claim about musical correctness; see [Rough edges](rough-edges.md).
+`--metrics` asks for others, comma-separated:
+
+```bash
+zeus evaluate ... --metrics SER,SERpitchonly
+```
+
+```
+SER: 4.123
+SERpitchonly: 1.902
+```
+
+`SERpitchonly` counts pitch tokens alone, which separates reading the right notes from getting their durations right; `SERnotuplets` ignores tuplet brackets and ratios, for corpora where guessed-at implicit tuplets drown the signal. See [Evaluation metrics](evaluation-metrics.md) for what each one means and when it earns its place.
+
+All of them are computed on the token sequence rather than on the music, so they are sensitive to how the notation was linearized — two transcriptions a musician would call equivalent can differ in LMX and be counted as error. Treat SER as a training signal rather than as a claim about musical correctness.
 
 A number alone will not tell you *how* a model fails. Feed the predictions to [`zeus visualize-predictions`](visualizing-data-and-predictions.md) to see them beside their images, ordered worst-last.
 
@@ -156,6 +168,8 @@ zeus train \
 Two of those are not optional knobs and are worth knowing before you start. `--experiment` names the run, and becomes the model's name if it is ever deployed under Musibot. `--input-subdivisions` says what the model will be trained to read; it is stored in the snapshot, and it is what stops a grandstaff model being handed staves later.
 
 Fine-tuning an existing snapshot uses `--model-snapshot` in place of `--architecture`, and inherits both of those from what it loads.
+
+`zeus train` takes `--metrics` too, deciding what each periodic evaluation reports into tensorboard.
 
 Getting data into the shape `--train` expects is a separate job: see [Converting MusiCorpus datasets to Zeus format](converting-musicorpus-datasets-to-zeus-format.md) and [Zeus dataset format and pickling](zeus-dataset-format-and-pickling.md).
 

@@ -19,6 +19,7 @@ First release in preparation. Everything below is new relative to the code inher
 - **`model_options.yaml` in a snapshot** — declares which Musicorpus page subdivisions the model reads (`Staves`, `Grandstaves`, `Systems`), and the name and version it announces to Musibot. Snapshots written before this file existed read as `Grandstaves`, and can be corrected by writing the file into the folder by hand rather than retraining. See [Model snapshots](docs/model-snapshots.md).
 - **A public python API** — `from zeus import Zeus, InferenceOptions, …`. The names are resolved lazily, so `import zeus` costs nothing and does not import TensorFlow. See [Python API](docs/python-api.md).
 - **`--input-subdivisions` on `zeus train`**, required when training a new model, inherited from the snapshot when fine-tuning.
+- **A named set of evaluation metrics** in `zeus.evaluation`, selectable with `--metrics` on both `zeus train` and `zeus evaluate`, or with `metrics=` in python. `SER` remains the default and the only one computed unless others are asked for. `SERpitchonly` is new — it counts pitch tokens alone, separating whether the model read the right notes from whether it got their durations right. See [Evaluation metrics](docs/evaluation-metrics.md).
 - **`--sample-count` on `zeus visualize-predictions`**, which was fixed at 100.
 - Documentation: [Python API](docs/python-api.md), [Running Zeus as a Musibot model](docs/musibot-model.md), [Versioning and releases](docs/versioning-and-releases.md), [Repository layout](docs/repository-layout.md), [Visualizing data and predictions](docs/visualizing-data-and-predictions.md), [Rough edges](docs/rough-edges.md), and an account of what belongs in `architecture_options.yaml` versus `model_options.yaml`.
 
@@ -30,6 +31,12 @@ First release in preparation. Everything below is new relative to the code inher
 - **`zeus visualize-predictions` no longer takes `--architecture`** and no longer loads TensorFlow, since the predictions have already been made. `--predictions` is now required; its default named a path that could not exist.
 - Modules are named in snake_case, and the package is importable as documented rather than by internal path.
 - `zeus musicorpus` refuses `--re-crop` and `--normalize-image-height` before doing any work, rather than exiting with status 0 partway through.
+- **`SERnotuplets` is no longer computed on every evaluation.** It answers a question specific to corpora full of implicit tuplets, and reporting it always made every run carry a number most of them had no use for. Ask for it with `--metrics` when it is the one you want.
+
+
+### Removed
+
+- **MusicXML no longer travels in dataset pickles.** `zeus pickle --with-musicxml` and `ZeusDatasetSample.musicxml` are gone; nothing read the field, and evaluating at the MusicXML level needs decoding, is expensive, and belongs to a benchmarking rig run after training rather than to the repository that trains. Zeus is LMX-first. The `.musicxml` files in a dataset folder stay — `zeus render` engraves sample images from them — and `zeus predict` still decodes MusicXML as a convenience. Pickles written before this still load; the stale field is ignored.
 
 
 ### Fixed

@@ -22,7 +22,7 @@ from zeus import Zeus, InferenceOptions, TrainingOptions, ZeusDataset
 | `InferenceOptions` | What an inference run does: batch size, image transformations, length and width limits. |
 | `TokenMap` | The mapping between model output indices and LMX tokens. Part of a snapshot, and inseparable from its weights. |
 | `ZeusDataset` | A dataset split loaded in memory, as a list of samples. |
-| `ZeusDatasetSample` | One sample: an image, its LMX, and optionally its MusicXML. |
+| `ZeusDatasetSample` | One sample: an image and its LMX. |
 | `ShuffledView` | A shuffled view over a `ZeusDataset`, which is what training consumes. |
 
 These names are the API. The module paths beneath them (`zeus.model.zeus`, `zeus.data.zeus_dataset`, …) are internal arrangement and may move; anything re-exported above will not move without a version bump.
@@ -79,10 +79,25 @@ predictions, metrics = model.evaluate(
     with_progress_bar=True,
 )
 
-print(metrics)  # {'SER': 4.12, 'SERnotuplets': 3.87}
+print(metrics)  # {'SER': 4.12}
 ```
 
 `predictions` is one LMX string per sample, in the dataset's own order. Passing `write_predictions_to` and `write_metrics_to` also writes them to disk, which is what `zeus evaluate` does.
+
+`metrics=` chooses what is computed, defaulting to SER alone:
+
+```py
+from zeus.evaluation import SER, SER_PITCH_ONLY
+
+predictions, metrics = model.evaluate(
+    dataset=dataset,
+    inference_options=InferenceOptions(batch_size=64),
+    with_progress_bar=True,
+    metrics=[SER, SER_PITCH_ONLY],
+)
+```
+
+`Zeus.train` takes the same argument, deciding what its periodic evaluations report. See [Evaluation metrics](evaluation-metrics.md) for what each one measures, and for how to add another.
 
 See [Zeus dataset format and pickling](zeus-dataset-format-and-pickling.md) for where those pickles come from.
 

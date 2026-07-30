@@ -19,7 +19,7 @@ def a_dataset(lmx_strings: list[str]) -> ZeusDataset:
     return ZeusDataset(
         name="test-dataset",
         samples=[
-            ZeusDatasetSample(sample_name=f"s{i}", image=AN_IMAGE, lmx=lmx, musicxml=None)
+            ZeusDatasetSample(sample_name=f"s{i}", image=AN_IMAGE, lmx=lmx)
             for i, lmx in enumerate(lmx_strings)
         ],
     )

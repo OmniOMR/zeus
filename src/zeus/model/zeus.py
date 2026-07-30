@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from ..data.shuffled_view import ShuffledView
 from ..data.zeus_dataset import ZeusDataset
-from ..evaluation.ser_metric import ser_metric
+from ..evaluation.metrics import DEFAULT_METRICS, Metric, compute_metrics
 from .architecture_options import ArchitectureOptions
 from .construct_tf_dataset import construct_tf_dataset, construct_tf_dataset_for_images
 from .inference_options import InferenceOptions
@@ -169,6 +169,7 @@ class Zeus:
         training_options: TrainingOptions,
         inference_options_for_evaluation: InferenceOptions,
         logdir_path: Path,
+        metrics: list[Metric] | None = None,
     ):
         """
         Runs a training procedure on the model and dumps all the intermediate
@@ -178,6 +179,8 @@ class Zeus:
         :param shuffled_train_dataset: The dataset that should be used for training,
             wrapped in a shuffled view.
         :param training_options: Parameters of the training process.
+        :param metrics: Which metrics the periodic evaluations report, both
+            into the logdir and into tensorboard. Defaults to SER alone.
         :param logdir_path: Path to the directory where TensorBoard output
             will be logged as well as evaluation results and intermediate
             and final weights of the model.
@@ -199,6 +202,8 @@ class Zeus:
         # store training options in the logdir
         training_options.write_to_yaml_file(logdir_path / "training_options.yaml")
 
+        metrics = metrics if metrics is not None else DEFAULT_METRICS
+
         # define the evaluation callback
         # https://www.tensorflow.org/versions/r2.12/api_docs/python/tf/keras/callbacks/Callback#on_epoch_end
         zeus = self
@@ -207,7 +212,7 @@ class Zeus:
             def on_epoch_end(self, epoch: int, logs=None):
                 nonlocal zeus
                 nonlocal inference_options_for_evaluation, logdir_path
-                nonlocal training_options, dev_datasets, test_datasets
+                nonlocal training_options, dev_datasets, test_datasets, metrics
                 if epoch + 1 < training_options.epochs and (
                     epoch + 1 < training_options.evaluation_from
                     or (epoch + 1) % training_options.evaluation_each != 0
@@ -228,16 +233,17 @@ class Zeus:
                     # run evaluation and write predictions and metrics to logdir
                     evaluation_name = f"e{epoch + 1}-{dataset.name}"
                     print("[Zeus]: Running evaluation", evaluation_name, "...")
-                    _, metrics = zeus.evaluate(
+                    _, computed = zeus.evaluate(
                         dataset=dataset,
                         inference_options=inference_options_for_evaluation,
                         with_progress_bar=False,
+                        metrics=metrics,
                         write_predictions_to=logdir_path / "evaluation" / f"{evaluation_name}.lmx",
                         write_metrics_to=logdir_path / "evaluation" / f"{evaluation_name}.yaml",
                     )
                     # and write metrics to tensorboard
-                    for metric, value in metrics.items():
-                        logs[f"{dataset.name}_{metric}"] = value
+                    for metric_name, value in computed.items():
+                        logs[f"{dataset.name}_{metric_name}"] = value
 
                 print(f"[Zeus]: Evaluation of epoch {epoch + 1} done.")
 
@@ -263,6 +269,7 @@ class Zeus:
         dataset: ZeusDataset,
         inference_options: InferenceOptions,
         with_progress_bar: bool,
+        metrics: list[Metric] | None = None,
         write_predictions_to: Path | None = None,
         write_metrics_to: Path | None = None,
     ) -> tuple[list[str], dict[str, float]]:
@@ -275,7 +282,11 @@ class Zeus:
 
         It can also write both predictions and metrics to files if
         their paths are provided.
+
+        :param metrics: Which metrics to compute, from `zeus.evaluation`.
+            Defaults to SER alone.
         """
+        metrics = metrics if metrics is not None else DEFAULT_METRICS
         # prepare the dataset
         tf_dataset = construct_tf_dataset(
             shuffled_view=ShuffledView.create_unshuffled_for(dataset),
@@ -298,12 +309,11 @@ class Zeus:
 
         # compute metrics
         gold_lmx_samples = [sample.lmx for sample in dataset.samples]
-        computed_metrics: dict[str, float] = {}
 
         if with_progress_bar:
             print("Computing metrics...")
 
-        computed_metrics.update(ser_metric(gold_lmx_samples, predicted_lmx_samples))
+        computed_metrics = compute_metrics(metrics, gold_lmx_samples, predicted_lmx_samples)
 
         if with_progress_bar:
             print("Done. Metrics:", computed_metrics)
