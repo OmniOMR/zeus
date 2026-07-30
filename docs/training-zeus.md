@@ -98,3 +98,18 @@ When you run training, it creates a folder `logs/{experiment-name}-{timestamp}` 
     - `e5-{eval_dataset_name}.yaml` evaluation metrics for a dataset at epoch 5
     - `e5-{eval_dataset_name}.lmx` evaluation predictions for a dataset at epoch 5 (one sample on one line)
 - `training_options.yaml` The training options used for the training process.
+
+
+## Publishing a snapshot
+
+When you want to publish a model snapshot, include a `LICENSE` file. Say, CC BY-SA with [this content](https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt).
+
+Then append a date to the model name, say converting `my-experiment.model` into `my-experiment-2026-07-10.model` and make sure it corresponds to the Musibot name and version in the `model_options.yaml` file to avoid confusion during deployment (adjust one or the other to match, keep the musibot version more detailed, with epoch number and such).
+
+Finally, tar and zip the folder into a single file:
+
+```bash
+tar -czvf my-experiment-2026-07-10.model.tar.gz my-experiment-2026-07-10.model
+```
+
+Then attach the `.tar.gz` file to a GitHub release to be publicly available for download (or publish through any other channel).

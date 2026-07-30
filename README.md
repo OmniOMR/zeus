@@ -38,9 +38,9 @@ Learn more about [VCS support](https://pip.pypa.io/en/stable/topics/vcs-support/
 
 This is a list of known Zeus model snapshots available for download:
 
-- Latest solo-staff 2026 experiments (TODO license)
-    - `[2024-07-10]` **`zod-bw-auth-2024-07-10.model`** (TODO) trained on Dolores
-    - `[2024-07-10]` **`zod-bw-auth-ft-2024-07-10.model`** (TODO) trained on Dolores, finetuned on OmniOMR
+- Latest solo-staff 2026 experiments ([code](https://github.com/Jirka-Mayer/ijdar/releases/tag/model-snapshots)) (CC BY-SA license)
+    - `[2024-07-20]` **`zod-bw-auth-ft-2026-07-20.model`** ([download](https://github.com/Jirka-Mayer/ijdar/releases/download/model-snapshots/zod-bw-auth-ft-2026-07-20.model.model.tar.gz), [url](https://github.com/Jirka-Mayer/ijdar/releases/tag/model-snapshots)) trained on Dolores, finetuned on OmniOMR
+    - `[2024-07-13]` **`zod-bw-auth-2026-07-13.model`** ([download](https://github.com/Jirka-Mayer/ijdar/releases/download/model-snapshots/zod-bw-auth-2026-07-13.model.tar.gz), [url](https://github.com/Jirka-Mayer/ijdar/releases/tag/model-snapshots)) trained on Dolores
 - Original 2024 grandstaff B/W models ([code](https://github.com/ufal/olimpic-icdar24/releases), [paper](https://doi.org/10.1007/978-3-031-70552-6_4)) (CC BY-SA licenses)
     - `[2024-02-12]` **`zeus-camera-grandstaff-lmx-1.0-2024-02-12.model`** ([download](https://github.com/ufal/olimpic-icdar24/releases/download/grandstaff-models/zeus-camera-grandstaff-lmx-1.0-2024-02-12.model.tar.gz), [url](https://github.com/ufal/olimpic-icdar24/releases/tag/grandstaff-models)) trained on Camera GrandStaff
     - `[2024-02-12]` **`zeus-grandstaff-lmx-1.0-2024-02-12.model`** ([download](https://github.com/ufal/olimpic-icdar24/releases/download/grandstaff-models/zeus-grandstaff-lmx-1.0-2024-02-12.model.tar.gz), [url](https://github.com/ufal/olimpic-icdar24/releases/tag/grandstaff-models)) trained on GrandStaff
