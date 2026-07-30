@@ -9,7 +9,12 @@ This file records the package version. A trained model carries its own version, 
 
 ## Unreleased
 
-First release in preparation. Everything below is new relative to the code inherited from the [ICDAR 2024 paper](https://github.com/ufal/olimpic-icdar24).
+Nothing yet.
+
+
+## 1.0.0 — 2026-07-30
+
+First release. Everything below is new relative to the code inherited from the [ICDAR 2024 paper](https://github.com/ufal/olimpic-icdar24).
 
 
 ### Added
@@ -21,7 +26,7 @@ First release in preparation. Everything below is new relative to the code inher
 - **`--input-subdivisions` on `zeus train`**, required when training a new model, inherited from the snapshot when fine-tuning.
 - **A named set of evaluation metrics** in `zeus.evaluation`, selectable with `--metrics` on both `zeus train` and `zeus evaluate`, or with `metrics=` in python. `SER` remains the default and the only one computed unless others are asked for. `SERpitchonly` is new — it counts pitch tokens alone, separating whether the model read the right notes from whether it got their durations right. See [Evaluation metrics](docs/evaluation-metrics.md).
 - **`--sample-count` on `zeus visualize-predictions`**, which was fixed at 100.
-- Documentation: [Python API](docs/python-api.md), [Running Zeus as a Musibot model](docs/musibot-model.md), [Versioning and releases](docs/versioning-and-releases.md), [Repository layout](docs/repository-layout.md), [Visualizing data and predictions](docs/visualizing-data-and-predictions.md), [Rough edges](docs/rough-edges.md), and an account of what belongs in `architecture_options.yaml` versus `model_options.yaml`.
+- Documentation, most of it new: [Using the CLI](docs/using-the-cli.md), [Python API](docs/python-api.md), [Running Zeus as a Musibot model](docs/musibot-model.md), [Evaluation metrics](docs/evaluation-metrics.md), [Versioning and releases](docs/versioning-and-releases.md), [Repository layout](docs/repository-layout.md), [Visualizing data and predictions](docs/visualizing-data-and-predictions.md), [Rough edges](docs/rough-edges.md), and an account of what belongs in `architecture_options.yaml` versus `model_options.yaml`.
 
 
 ### Changed
