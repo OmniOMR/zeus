@@ -3,15 +3,6 @@
 Known limitations, in the same spirit as [Musibot's](https://github.com/OmniOMR/musibot/blob/main/docs/rough-edges.md): things that are missing, awkward, or right only by convention. Written down because a limitation that is documented is a decision, and one that is not is a trap.
 
 
-## The signature cannot say what Zeus reads
-
-A Musibot *Signature* is a flat list of file paths, and Zeus reads *any* staff of a page — however many there are, named however the dataset named them. So `zeus musibot` announces `Staves/1/image.jpg` as a placeholder standing in for all of them.
-
-Nothing breaks: the announcement is not consulted when work arrives, and an execution naming `Staves/7/image.jpg` is served identically. What suffers is discoverability — a *Pipeline* author cannot learn from the listing that Zeus wants calling once per staff, and the *ImplicitPipeline* generated for Zeus offers the page-level `image.jpg`, which Zeus will transcribe as though the whole page were one staff.
-
-Fixing it means growing the *Signature* format in `musibot-core`. The shape it would want is written down in [Running Zeus as a Musibot model](musibot-model.md#the-signature-cannot-say-what-zeus-actually-reads).
-
-
 ## A malformed prediction crashes the `lmx` decoder
 
 An LMX string with tokens before its first `measure` makes the pinned `lmx` release raise `AttributeError` from inside its own error-reporting path — `Decoder.py` passes a message where a `Token` is expected. Models do emit such sequences, especially early in training.

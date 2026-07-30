@@ -38,6 +38,19 @@ INPUT_FILE = "image.jpg"
 MUSICXML_FILE = "transcription.musicxml"
 LMX_FILE = "transcription.lmx"
 
+SUBDIVISION_SLOTS = {
+    "Staves": "staff",
+    "Grandstaves": "grandstaff",
+    "Systems": "system",
+}
+"""The slot name each subdivision's instance is bound to in the signature.
+
+One name per subdivision, and the same name on the input and the output side,
+which is what says the transcription lands beside the image it came from.
+Distinct names because a name binds across the whole signature, so a model
+reading two subdivisions must not tie their instances together.
+"""
+
 
 class InvalidExecution(Exception):
     """The execution asks for something this model cannot do."""
@@ -77,28 +90,44 @@ class ZeusMusibotModel:
         """
         name, version = self.model_options.musibot_identity(self.snapshot_path)
 
-        outputs = [MUSICXML_FILE]
+        output_files = [MUSICXML_FILE]
         if self.write_lmx:
-            outputs.append(LMX_FILE)
+            output_files.append(LMX_FILE)
 
         return {
             "name": name,
             "version": version,
             "signature": {
-                # Only the first subdivision instance can be named, because a
-                # Signature is a flat list of paths and cannot say "every
-                # staff, however many there are". See docs/musibot-model.md.
-                "input": [f"{subdivision}/1/{INPUT_FILE}" for subdivision in self._subdivisions()],
+                "input": [self._pattern(s, INPUT_FILE) for s in self._subdivisions()],
                 "output": [
-                    f"{subdivision}/1/{output}"
+                    self._pattern(subdivision, output_file)
                     for subdivision in self._subdivisions()
-                    for output in outputs
+                    for output_file in output_files
                 ],
             },
-            # Zeus is a batched model: filling one forward pass with several
-            # staves is most of what makes it fast.
+            # `{staff}` rather than `{*staff}` because Zeus transcribes one
+            # staff without reference to any other, and that is exactly what
+            # decides between them: with one instance per execution the unit of
+            # work and the unit of reporting are the same thing, so a batch of
+            # twelve staves reports twelve outcomes and one unreadable staff
+            # fails only itself. Batching is how they go through the model
+            # together anyway, filling a single forward pass.
             "supports_batching": True,
         }
+
+    def _pattern(self, subdivision: str, file_name: str) -> str:
+        """One signature entry: `Staves/{staff}/image.jpg`.
+
+        Marked optional when this model reads more than one subdivision. Every
+        non-optional input entry has to be matched by an execution, so two
+        required entries would demand a staff *and* a grandstaff at once, while
+        Zeus reads exactly one image. Declaring the wider signature and
+        refusing what does not fit is what the Musibot docs prescribe for a
+        model whose real expectations are narrower than a signature can say —
+        `_resolve_input` is where the refusal happens.
+        """
+        optional = "?" if len(self._subdivisions()) > 1 else ""
+        return f"{subdivision}/{{{SUBDIVISION_SLOTS[subdivision]}}}/{file_name}{optional}"
 
     def _subdivisions(self) -> list[str]:
         return self.model_options.input_subdivisions

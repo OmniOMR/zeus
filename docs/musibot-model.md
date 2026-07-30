@@ -23,8 +23,11 @@ On startup Zeus loads the snapshot and then announces itself. Loading first is d
     "name": "zeus-solo-omniomr",
     "version": "2026-07-28-143052-e50",
     "signature": {
-      "input": ["Staves/1/image.jpg"],
-      "output": ["Staves/1/transcription.musicxml", "Staves/1/transcription.lmx"]
+      "input": ["Staves/{staff}/image.jpg"],
+      "output": [
+        "Staves/{staff}/transcription.musicxml",
+        "Staves/{staff}/transcription.lmx"
+      ]
     },
     "supports_batching": true
   }
@@ -32,6 +35,34 @@ On startup Zeus loads the snapshot and then announces itself. Loading first is d
 ```
 
 Everything in there comes from the snapshot rather than from the command line, because the name and version are what a *Pipeline* pins and what Musibot's registry keys a model by. Two workers announcing the same name and version are taken to be one model scaled horizontally — so if this were a deployment-time flag, two machines serving *different* snapshots could collide into one registry entry and executions would land on whichever answered first. See [Model snapshots](model-snapshots.md) for where the values come from and how to change them.
+
+
+### Reading the signature
+
+`{staff}` is a [slot](https://github.com/OmniOMR/musibot/blob/main/docs/signatures.md): it stands for one subdivision instance, whatever it happens to be called. So the signature is true of every page rather than of one — `Staves/7/image.jpg` and `Staves/2-3/image.jpg` both fit it, and the Musicorpus Specification allows an instance to be named with any path-safe string.
+
+Two things follow from how it is written.
+
+**The same name on both sides** says the transcription lands beside the image it came from. Read staff 7, write staff 7.
+
+**`{staff}` and not `{*staff}`** says one staff per execution rather than all of them at once, which is a claim about how Zeus works rather than a convenience. Zeus transcribes a staff without reference to any other, so the unit of work is one instance — and keeping that the same as the unit of reporting is what lets a batch of twelve staves report twelve outcomes, so that one unreadable staff fails only itself. A `{*staff}` model has a single indivisible outcome and could only fail all twelve or silently skip one. Batching is how they still go through the model together, filling one forward pass.
+
+The practical consequence is that the `api` service now refuses a wrong input list before it reaches a worker, with a message naming the mismatch:
+
+```
+The input file 'image.jpg' is not named by the signature (Staves/{staff}/image.jpg)
+'Staves/{staff}/image.jpg' names one file, but the input list has 2: …
+```
+
+That first one matters more than it looks. Zeus handed a whole page does not complain — it transcribes the page as though it were one staff and returns confident nonsense — and the [ImplicitPipeline](https://github.com/OmniOMR/musibot/blob/main/docs/domain-model.md) generated for a model is exactly its signature, so this is what stops a *User* running Zeus over a page image and believing the result.
+
+A model that reads more than one subdivision announces every entry as optional:
+
+```json
+"input": ["Grandstaves/{grandstaff}/image.jpg?", "Staves/{staff}/image.jpg?"]
+```
+
+because every non-optional entry has to be matched, and two required ones would demand a staff *and* a grandstaff in the same execution. That is wider than the truth — it also admits an execution naming both, or neither — and Zeus refuses those itself with `Zeus reads exactly one image per execution`. Declaring the wider signature and reporting a plain error for what satisfies it but not the model is what Musibot prescribes for expectations a signature cannot express.
 
 
 ## What it reads and writes
@@ -78,7 +109,7 @@ Failures are reported per execution and reach the *Pipeline Execution* log, so t
 | `There is no file at 'Staves/9/image.jpg'.` | The head staged something else, or the pipeline named a staff that does not exist. |
 | `This model reads Grandstaves, but was given 'Staves/1/image.jpg'.` | A pipeline is routing the wrong subdivision to this model. |
 | `Could not decode the predicted LMX into MusicXML: …` | The model's output was not well-formed LMX. A prediction is not a promise; this is an ordinary outcome for a hard image. |
-| `Zeus reads exactly one image per execution, but 2 input file(s) were given.` | The signature was misread by whoever built the pipeline. |
+| `Zeus reads exactly one image per execution, but 2 input file(s) were given.` | Only reachable for a model reading several subdivisions, whose signature has to be wider than the truth. For a single-subdivision model the `api` service refuses this first. |
 
 A model that dies fails its work and reports nothing useful, so `zeus musibot` reports and keeps serving instead: whatever goes wrong inside one execution is caught, reported as that execution's failure, and the loop continues. An execution the model somehow never reports is failed on its behalf rather than left to time out.
 
@@ -110,22 +141,3 @@ python3.11 -m venv /opt/worker-head/.venv
 Model weights are the model repository's business, never Musibot's; see [Model snapshots](model-snapshots.md) for where Zeus keeps its.
 
 > **Note:** passing file descriptors to a child is POSIX-only. Zeus can be developed anywhere, but it has to reach Linux (or WSL) before it can run under a worker head.
-
-
-## The signature cannot say what Zeus actually reads
-
-This is a known limitation, and it is worth being explicit about because the announcement above looks more precise than it is.
-
-A *Signature* is a flat list of file paths. Zeus reads *any* staff of a page — `Staves/1/image.jpg`, `Staves/7/image.jpg`, `Staves/2-3/image.jpg`, whatever the page happens to contain — and the Musicorpus Specification allows a subdivision instance to be named with any path-safe string, so `1-2` and `2-7` are both ordinary. There is no way to write "every staff, however many there are" in a list of paths.
-
-So Zeus announces `Staves/1/image.jpg`: the first instance, standing in for all of them. It is a placeholder, not a restriction — an execution naming `Staves/7/image.jpg` is served exactly the same way, and the announcement is not consulted when work arrives.
-
-Musibot records this as an open question in both [discovery.md](https://github.com/OmniOMR/musibot/blob/main/docs/discovery.md) and [worker-ipc.md](https://github.com/OmniOMR/musibot/blob/main/docs/worker-ipc.md). Resolving it needs a *Signature* that can express a repeated subdivision, which is a change to `musibot-core` and to everything that reads a signature. The shape Zeus would want is something like:
-
-```json
-"input": [{ "subdivision": "Staves", "file": "image.jpg", "each": true }]
-```
-
-— one entry meaning "this file, in every instance of this subdivision" — with the flat string form kept for files that genuinely are singular, such as a page-level `image.jpg`. Until that exists, the practical consequence is small: a *Pipeline* author cannot learn from the listing that Zeus wants to be called once per staff, and has to know it. The [ImplicitPipeline](https://github.com/OmniOMR/musibot/blob/main/docs/domain-model.md) generated for Zeus inherits the same imprecision — it will offer the page-level `image.jpg`, which Zeus will dutifully transcribe as though the whole page were one staff.
-
-When the signature format grows this, Zeus should announce the real thing and this section should shrink to a note.

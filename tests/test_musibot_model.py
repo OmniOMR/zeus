@@ -101,23 +101,53 @@ def test_an_unnamed_snapshot_falls_back_to_its_folder_name(tmp_path: Path) -> No
     assert description["version"] == "solo26"
 
 
-def test_the_signature_follows_what_the_model_reads(tmp_path: Path) -> None:
+def test_the_signature_binds_the_output_to_the_input_instance(tmp_path: Path) -> None:
+    """The same slot name on both sides is what says the transcription lands
+    beside the image it came from, whichever staff that was."""
     description = a_model(tmp_path, subdivisions=["Staves"]).describe()
 
-    assert description["signature"]["input"] == ["Staves/1/image.jpg"]
+    assert description["signature"]["input"] == ["Staves/{staff}/image.jpg"]
     assert description["signature"]["output"] == [
-        "Staves/1/transcription.musicxml",
-        "Staves/1/transcription.lmx",
+        "Staves/{staff}/transcription.musicxml",
+        "Staves/{staff}/transcription.lmx",
     ]
 
 
-def test_a_model_reading_both_announces_both(tmp_path: Path) -> None:
+def test_one_instance_per_execution_not_all_of_them(tmp_path: Path) -> None:
+    """`{staff}` rather than `{*staff}`.
+
+    Zeus transcribes one staff without reference to any other, so the unit of
+    work is one instance — which keeps it the same as the unit of reporting,
+    and lets one unreadable staff in a batch fail only itself.
+    """
+    signature = a_model(tmp_path, subdivisions=["Staves"]).describe()["signature"]
+
+    assert not any("{*" in entry for entry in signature["input"] + signature["output"])
+
+
+def test_each_subdivision_gets_a_slot_name_of_its_own(tmp_path: Path) -> None:
+    """A slot name binds across the whole signature, so sharing one between
+    two subdivisions would tie their instances together."""
     description = a_model(tmp_path, subdivisions=["Staves", "Grandstaves"]).describe()
 
     assert description["signature"]["input"] == [
-        "Grandstaves/1/image.jpg",
-        "Staves/1/image.jpg",
+        "Grandstaves/{grandstaff}/image.jpg?",
+        "Staves/{staff}/image.jpg?",
     ]
+
+
+def test_reading_several_subdivisions_makes_every_entry_optional(tmp_path: Path) -> None:
+    """Every non-optional input entry must be matched, so two required ones
+    would demand a staff and a grandstaff at once."""
+    signature = a_model(tmp_path, subdivisions=["Staves", "Grandstaves"]).describe()["signature"]
+
+    assert all(entry.endswith("?") for entry in signature["input"] + signature["output"])
+
+
+def test_reading_one_subdivision_leaves_nothing_optional(tmp_path: Path) -> None:
+    signature = a_model(tmp_path, subdivisions=["Staves"]).describe()["signature"]
+
+    assert not any(entry.endswith("?") for entry in signature["input"] + signature["output"])
 
 
 def test_batching_is_advertised(tmp_path: Path) -> None:
@@ -128,7 +158,7 @@ def test_batching_is_advertised(tmp_path: Path) -> None:
 def test_lmx_is_left_out_of_the_signature_when_it_is_not_written(tmp_path: Path) -> None:
     description = a_model(tmp_path, write_lmx=False).describe()
 
-    assert description["signature"]["output"] == ["Staves/1/transcription.musicxml"]
+    assert description["signature"]["output"] == ["Staves/{staff}/transcription.musicxml"]
 
 
 # --- what it writes ---------------------------------------------------------
