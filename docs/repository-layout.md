@@ -7,6 +7,7 @@ zeus/
   src/zeus/          the package
   tests/             unit tests, no weights and no GPU
   docs/              this folder
+  .github/           the CI workflow
   datasets/          generated — Zeus datasets and their pickles
   models/            generated — model snapshots
   logs/              generated — training runs, tensorboard, evaluations
