@@ -133,7 +133,7 @@ class KerasModel(tf.keras.Model):
         """Sets the model up for training"""
         self.training_options = training_options
 
-        lr = 1e-3
+        lr = training_options.learning_rate
         if training_options.lr_decay == "cos":
             assert training_options.epochs is not None
             lr = tf.optimizers.schedules.CosineDecay(

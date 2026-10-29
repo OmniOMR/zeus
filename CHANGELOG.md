@@ -9,6 +9,13 @@ This file records the package version. A trained model carries its own version, 
 
 ## Unreleased
 
+> **⚠️ `--learning-rate` was ignored until this release.** Every model trained with Zeus 1.0.0 or earlier — including every fine-tuning run — trained at 1e-3, whatever learning rate it was given. A run that passed `--learning-rate 1e-4`, as the fine-tuning guide recommends, fine-tuned at a rate ten times higher than intended. Results and hyperparameter conclusions from such runs should be re-examined, and retraining one with this release will not reproduce it unless it passes `--learning-rate 1e-3`.
+
+
+### Fixed
+
+- **`--learning-rate` on `zeus train`, and `TrainingOptions.learning_rate`, now take effect.** The optimizer was constructed with a hard-coded 1e-3 since the code was inherited from the ICDAR 2024 paper; the option was parsed, written to `training_options.yaml`, and never read. The `training_options.yaml` of an affected run therefore records the rate it was asked for, not the one it used.
+
 
 ### Added
 
