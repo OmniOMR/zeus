@@ -104,6 +104,6 @@ logs/solo26-omniomr-260730_143052/snapshots/e50.model
     → musibot_model_version: 2026-07-30-143052-e50
 ```
 
-That suffix is not decoration. `zeus train` stores a snapshot after every evaluated epoch, and picking the best one off the validation curve is the [documented workflow](training-zeus.md) — so every epoch of a run shares a start time, and without the suffix deploying `e40` and `e50` would announce the same identity and Musibot would merge them.
+That suffix is not decoration. `zeus train` stores a snapshot after every evaluated epoch, and picking the best one off the validation curve is the [documented workflow](training-zeus.md) — so every epoch of a run shares a start time, and without the suffix deploying `e40` and `e50` would announce the same identity and Musibot would merge them. The snapshots a run ends with get suffixes of their own in the same way: `final` after a fixed number of epochs, `ebest` after [early stopping](training-zeus.md#early-stopping).
 
 A fine-tuning run regenerates both from its own `--experiment` and start time rather than inheriting the parent's, for the same reason.

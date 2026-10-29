@@ -9,8 +9,9 @@ import yaml
 class TrainingOptions:
     """Options that constrain the way the model is trained"""
 
-    epochs: int
-    """How many epochs to train for."""
+    epochs: int | None
+    """How many epochs to train for. None when training stops early instead,
+    see `early_stopping_patience`."""
 
     evaluation_from: int
     """
@@ -51,6 +52,32 @@ class TrainingOptions:
 
     seed: int = 42
     """Random seed to be used for augmentations and shuffling"""
+
+    early_stopping_patience: int | None = None
+    """When set, training has no fixed length: it runs until SER on the early
+    stopping dataset has not reached a new minimum for this many epochs.
+    Exclusive with `epochs` and with learning rate decay."""
+
+    def __post_init__(self):
+        if (self.epochs is None) == (self.early_stopping_patience is None):
+            raise ValueError(
+                "Training needs exactly one of a fixed number of epochs "
+                + "or an early stopping patience."
+            )
+        if self.early_stopping_patience is not None:
+            if self.early_stopping_patience < 1:
+                raise ValueError("Early stopping patience must be at least 1.")
+            # Cosine decay is a schedule over a known number of steps, and an
+            # early-stopped run does not know its length. A decaying rate would
+            # also make the SER curve flatten for reasons other than the model
+            # having stopped improving.
+            if self.lr_decay != "none":
+                raise ValueError("Early stopping requires a fixed learning rate, lr_decay='none'.")
+
+    @property
+    def is_early_stopping(self) -> bool:
+        """Whether training runs until it stops improving, not for fixed epochs."""
+        return self.early_stopping_patience is not None
 
     def write_to_yaml_file(self, file_path: Path):
         """Writes training options into a yaml file"""

@@ -135,6 +135,7 @@ class KerasModel(tf.keras.Model):
 
         lr = 1e-3
         if training_options.lr_decay == "cos":
+            assert training_options.epochs is not None
             lr = tf.optimizers.schedules.CosineDecay(
                 lr, training_batch_count * training_options.epochs
             )

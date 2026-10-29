@@ -9,7 +9,16 @@ This file records the package version. A trained model carries its own version, 
 
 ## Unreleased
 
-Nothing yet.
+
+### Added
+
+- **`--early-stopping` on `zeus train`**, an alternative to `--epochs`: SER is measured on the given dataset after every epoch, and training stops once it has not reached a new minimum for `--stopping-patience` epochs, which is required and has no default. The run ends with an `ebest` snapshot of the best epoch instead of `final`. Snapshots are stored every epoch and those further back than the patience are deleted, except on the evaluation ticks. Requires a fixed learning rate. In python, `TrainingOptions.early_stopping_patience` and the `early_stopping_dataset` argument of `Zeus.train`. See [Training Zeus](docs/training-zeus.md#early-stopping).
+
+
+### Changed
+
+- **`--lr-decay` on `zeus train` no longer has a single default**: it is still `cos` with `--epochs`, and is `none` with `--early-stopping`. Its help text used to claim the default was `none`.
+- `TrainingOptions.epochs` may be `None`, and `TrainingOptions` now refuses a combination that names neither regime, or both.
 
 
 ## 1.0.0 — 2026-07-30

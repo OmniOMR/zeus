@@ -4,17 +4,41 @@ from dataclasses import replace
 from pathlib import Path
 
 import tensorflow as tf
+import yaml
 
 from ..data.shuffled_view import ShuffledView
 from ..data.zeus_dataset import ZeusDataset
-from ..evaluation.metrics import DEFAULT_METRICS, Metric, compute_metrics
+from ..evaluation.metrics import DEFAULT_METRICS, SER, Metric, compute_metrics
 from .architecture_options import ArchitectureOptions
 from .construct_tf_dataset import construct_tf_dataset, construct_tf_dataset_for_images
+from .early_stopping import EarlyStopping, is_evaluation_tick, snapshots_to_collect
 from .inference_options import InferenceOptions
 from .keras_model import KerasModel
 from .model_options import ModelOptions
 from .token_map import TokenMap
 from .training_options import TrainingOptions
+
+EARLY_STOPPING_EPOCH_LIMIT = 1_000_000
+"""What keras is told the length of an early-stopped run is. It needs a number,
+and training is ended by the callback long before this one is reached."""
+
+
+def write_early_stopping_record(file_path: Path, early_stopping: EarlyStopping, dataset_name: str):
+    """Writes how early stopping stands, rewritten after every epoch so that a
+    run killed partway still says which of its snapshots is the best."""
+    with open(file_path, "w") as file:
+        yaml.dump(
+            {
+                "dataset": dataset_name,
+                "metric": SER.name,
+                "patience": early_stopping.patience,
+                "best_epoch": early_stopping.best_epoch,
+                "best_value": early_stopping.best_ser,
+                "history": early_stopping.history,
+            },
+            file,
+            sort_keys=False,
+        )
 
 
 class Zeus:
@@ -86,21 +110,29 @@ class Zeus:
             model_options=model_options,
         )
 
-        zeus.materialize_weights()
+        zeus.load_weights(model_folder_path)
+
+        print("[Zeus]: Loaded model", model_folder_path)
+
+        return zeus
+
+    def load_weights(self, model_folder_path: Path):
+        """Replaces this model's weights with those stored in a snapshot folder.
+
+        The snapshot's architecture and token map are not read; they must be
+        the ones this model already has.
+        """
+        self.materialize_weights()
 
         # keras Layer property, prevents Keras
         # from calling "build" on invocation
         # (and thus overwriting loaded weights)
         # https://www.tensorflow.org/versions/r2.12/api_docs/python/tf/keras/layers/Layer
         # https://github.com/keras-team/keras/blob/v2.12.0/keras/engine/base_layer.py#L364
-        zeus.model.built = True
+        self.model.built = True
 
         # load weights
-        zeus.model.load_weights(str(model_folder_path / "weights.h5"))
-
-        print("[Zeus]: Loaded model", model_folder_path)
-
-        return zeus
+        self.model.load_weights(str(model_folder_path / "weights.h5"))
 
     def snapshot_version(self, snapshot_name: str) -> str | None:
         """Compose the announced version of one snapshot of a training run.
@@ -170,11 +202,18 @@ class Zeus:
         inference_options_for_evaluation: InferenceOptions,
         logdir_path: Path,
         metrics: list[Metric] | None = None,
+        early_stopping_dataset: ZeusDataset | None = None,
     ):
         """
         Runs a training procedure on the model and dumps all the intermediate
         and final results into the output logdir. It also stores the final
         model weights.
+
+        Training runs in one of two regimes. With `training_options.epochs`
+        set it runs for that many epochs and ends with a `final` snapshot.
+        With `training_options.early_stopping_patience` set it runs until SER
+        on `early_stopping_dataset` stops improving, and ends with an `ebest`
+        snapshot of the best epoch, whose weights the model is left holding.
 
         :param shuffled_train_dataset: The dataset that should be used for training,
             wrapped in a shuffled view.
@@ -184,7 +223,17 @@ class Zeus:
         :param logdir_path: Path to the directory where TensorBoard output
             will be logged as well as evaluation results and intermediate
             and final weights of the model.
+        :param early_stopping_dataset: The dataset SER is measured on after
+            every epoch to decide when to stop. Required exactly when the
+            training options ask for early stopping. It may or may not be
+            one of the dev datasets.
         """
+        if training_options.is_early_stopping != (early_stopping_dataset is not None):
+            raise ValueError(
+                "An early stopping dataset is required exactly when "
+                + "the training options set an early stopping patience."
+            )
+
         # prepare the training dataset
         train_tf_dataset = construct_tf_dataset(
             shuffled_view=shuffled_train_dataset,
@@ -204,6 +253,17 @@ class Zeus:
 
         metrics = metrics if metrics is not None else DEFAULT_METRICS
 
+        early_stopping: EarlyStopping | None = None
+        if training_options.early_stopping_patience is not None:
+            early_stopping = EarlyStopping(training_options.early_stopping_patience)
+
+        def snapshot_path(snapshot_name: str) -> Path:
+            return logdir_path / "snapshots" / f"{snapshot_name}.model"
+
+        # epochs whose snapshots currently exist, for the early stopping
+        # garbage collection to choose from
+        stored_epochs: set[int] = set()
+
         # define the evaluation callback
         # https://www.tensorflow.org/versions/r2.12/api_docs/python/tf/keras/callbacks/Callback#on_epoch_end
         zeus = self
@@ -213,39 +273,89 @@ class Zeus:
                 nonlocal zeus
                 nonlocal inference_options_for_evaluation, logdir_path
                 nonlocal training_options, dev_datasets, test_datasets, metrics
-                if epoch + 1 < training_options.epochs and (
-                    epoch + 1 < training_options.evaluation_from
-                    or (epoch + 1) % training_options.evaluation_each != 0
-                ):
-                    return
-
-                # store model weights to logdir
-                zeus.store(
-                    logdir_path / "snapshots" / f"e{epoch + 1}.model",
-                    musibot_model_version=zeus.snapshot_version(f"e{epoch + 1}"),
+                nonlocal early_stopping, early_stopping_dataset, stored_epochs
+                epoch_number = epoch + 1
+                is_last_fixed_epoch = epoch_number == training_options.epochs
+                is_tick = is_last_fixed_epoch or is_evaluation_tick(
+                    epoch_number,
+                    training_options.evaluation_from,
+                    training_options.evaluation_each,
                 )
 
-                datasets_for_evaluation = dev_datasets
-                if epoch + 1 == training_options.epochs:
-                    datasets_for_evaluation += test_datasets
+                # Under early stopping any epoch may turn out to be the best,
+                # so every one is stored and the surplus collected below.
+                if is_tick or early_stopping is not None:
+                    zeus.store(
+                        snapshot_path(f"e{epoch_number}"),
+                        musibot_model_version=zeus.snapshot_version(f"e{epoch_number}"),
+                    )
+                    stored_epochs.add(epoch_number)
 
-                for dataset in datasets_for_evaluation:
-                    # run evaluation and write predictions and metrics to logdir
-                    evaluation_name = f"e{epoch + 1}-{dataset.name}"
-                    print("[Zeus]: Running evaluation", evaluation_name, "...")
+                if early_stopping is not None:
+                    assert early_stopping_dataset is not None
                     _, computed = zeus.evaluate(
-                        dataset=dataset,
+                        dataset=early_stopping_dataset,
                         inference_options=inference_options_for_evaluation,
                         with_progress_bar=False,
-                        metrics=metrics,
-                        write_predictions_to=logdir_path / "evaluation" / f"{evaluation_name}.lmx",
-                        write_metrics_to=logdir_path / "evaluation" / f"{evaluation_name}.yaml",
+                        metrics=[SER],
                     )
-                    # and write metrics to tensorboard
-                    for metric_name, value in computed.items():
-                        logs[f"{dataset.name}_{metric_name}"] = value
+                    ser = computed[SER.name]
+                    logs[f"early_stopping_{SER.name}"] = ser
+                    improved = early_stopping.observe(epoch_number, ser)
+                    print(
+                        f"[Zeus]: Early stopping {SER.name} of epoch {epoch_number}: "
+                        + f"{ser:.4f}"
+                        + (" (new minimum)" if improved else "")
+                        + f", best is epoch {early_stopping.best_epoch}."
+                    )
+                    write_early_stopping_record(
+                        logdir_path / "early_stopping.yaml",
+                        early_stopping,
+                        early_stopping_dataset.name,
+                    )
 
-                print(f"[Zeus]: Evaluation of epoch {epoch + 1} done.")
+                if is_tick:
+                    datasets_for_evaluation = dev_datasets
+                    if is_last_fixed_epoch:
+                        datasets_for_evaluation = dev_datasets + test_datasets
+
+                    for dataset in datasets_for_evaluation:
+                        # run evaluation and write predictions and metrics to logdir
+                        evaluation_name = f"e{epoch_number}-{dataset.name}"
+                        print("[Zeus]: Running evaluation", evaluation_name, "...")
+                        _, computed = zeus.evaluate(
+                            dataset=dataset,
+                            inference_options=inference_options_for_evaluation,
+                            with_progress_bar=False,
+                            metrics=metrics,
+                            write_predictions_to=logdir_path
+                            / "evaluation"
+                            / f"{evaluation_name}.lmx",
+                            write_metrics_to=logdir_path / "evaluation" / f"{evaluation_name}.yaml",
+                        )
+                        # and write metrics to tensorboard
+                        for metric_name, value in computed.items():
+                            logs[f"{dataset.name}_{metric_name}"] = value
+
+                    print(f"[Zeus]: Evaluation of epoch {epoch_number} done.")
+
+                if early_stopping is not None:
+                    for collected in snapshots_to_collect(
+                        stored_epochs,
+                        epoch_number,
+                        early_stopping,
+                        training_options.evaluation_from,
+                        training_options.evaluation_each,
+                    ):
+                        shutil.rmtree(snapshot_path(f"e{collected}"))
+                        stored_epochs.discard(collected)
+
+                    if early_stopping.should_stop(epoch_number):
+                        print(
+                            f"[Zeus]: No new minimum for {early_stopping.patience} "
+                            + f"epochs, stopping after epoch {epoch_number}."
+                        )
+                        self.model.stop_training = True
 
         # run training
         self.model.prepare_for_training(
@@ -253,16 +363,45 @@ class Zeus:
         )
         self.model.fit(
             train_tf_dataset,
-            epochs=training_options.epochs,
+            epochs=(
+                training_options.epochs
+                if training_options.epochs is not None
+                else EARLY_STOPPING_EPOCH_LIMIT
+            ),
             callbacks=[EvaluationCallback(), tb_callback],
             verbose=1,
         )
 
-        # store the final weights
+        if early_stopping is None:
+            # store the final weights
+            self.store(
+                snapshot_path("final"),
+                musibot_model_version=self.snapshot_version("final"),
+            )
+            return
+
+        # Return to the best epoch, so that both the stored snapshot and the
+        # model left in hand are the result of the run, not its overshoot.
+        best_epoch = early_stopping.best_epoch
+        assert best_epoch is not None
+        self.load_weights(snapshot_path(f"e{best_epoch}"))
+        print(f"[Zeus]: Restored the best epoch, {best_epoch}.")
         self.store(
-            logdir_path / "snapshots" / "final.model",
-            musibot_model_version=self.snapshot_version("final"),
+            snapshot_path("ebest"),
+            musibot_model_version=self.snapshot_version("ebest"),
         )
+
+        for dataset in dev_datasets + test_datasets:
+            evaluation_name = f"ebest-{dataset.name}"
+            print("[Zeus]: Running evaluation", evaluation_name, "...")
+            self.evaluate(
+                dataset=dataset,
+                inference_options=inference_options_for_evaluation,
+                with_progress_bar=False,
+                metrics=metrics,
+                write_predictions_to=logdir_path / "evaluation" / f"{evaluation_name}.lmx",
+                write_metrics_to=logdir_path / "evaluation" / f"{evaluation_name}.yaml",
+            )
 
     def evaluate(
         self,

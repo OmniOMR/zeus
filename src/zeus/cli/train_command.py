@@ -74,11 +74,29 @@ def define_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--test", type=str, default=[], nargs="*", help="Paths to dataset pickles used for testing"
     )
-    parser.add_argument(
+    # The two training regimes: a fixed length, or until it stops improving.
+    length = parser.add_mutually_exclusive_group(required=True)
+    length.add_argument(
         "--epochs",
         type=int,
-        required=True,
         help="How many epochs on the training dataset to train for",
+    )
+    length.add_argument(
+        "--early-stopping",
+        type=str,
+        default=None,
+        help="Path to a dataset pickle on which SER is computed after every "
+        + "epoch; training stops once it has not reached a new minimum for "
+        + "--stopping-patience epochs, and ends with the best epoch stored "
+        + "as the 'ebest' snapshot. Requires a fixed learning rate.",
+    )
+    parser.add_argument(
+        "--stopping-patience",
+        type=int,
+        default=None,
+        help="Required with --early-stopping: how many epochs to continue "
+        + "past the latest minimum before stopping. There is no default, "
+        + "choose it from how jittery the SER curve of similar runs was.",
     )
     parser.add_argument(
         "--evaluation-from", type=int, default=1, help="Start evaluation with this epoch onward"
@@ -104,9 +122,11 @@ def define_parser(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "--lr-decay",
-        default="cos",
+        default=None,
         choices=["none", "cos"],
-        help="Type of learning rate decay, defaults to none",
+        help="Type of learning rate decay, defaults to 'cos' when training "
+        + "for fixed --epochs and to 'none' with --early-stopping, "
+        + "which permits no other",
     )
     parser.add_argument("--seed", type=int, default=42, help="RNG seed")
     parser.add_argument(
@@ -124,7 +144,41 @@ def define_parser(parser: argparse.ArgumentParser):
     )
 
 
+def resolve_lr_decay(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> Literal["none", "cos"]:
+    """Checks that the flags describe one coherent training regime, and
+    returns the learning rate decay that regime uses.
+
+    Runs before TensorFlow is imported, so a wrong combination of flags fails
+    at once rather than after several seconds. Exits through `parser.error`.
+    """
+    # The parser restricts this to the same two values the Literal names, so
+    # the cast asserts what argparse has already enforced. It stays None when
+    # not given, since its default depends on the regime.
+    lr_decay = cast(Literal["none", "cos"] | None, args.lr_decay)
+
+    if args.early_stopping is None:
+        if args.stopping_patience is not None:
+            parser.error("--stopping-patience only applies with --early-stopping")
+        return lr_decay if lr_decay is not None else "cos"
+
+    # Early stopping is only ever as good as the patience it was given, and a
+    # default would hide that choice from the one person who can make it.
+    if args.stopping_patience is None:
+        parser.error("--early-stopping requires --stopping-patience")
+    if args.stopping_patience < 1:
+        parser.error("--stopping-patience must be at least 1")
+    # Cosine decay needs to know the length of the run, and would flatten
+    # the SER curve for reasons other than the model having converged.
+    if lr_decay == "cos":
+        parser.error("--early-stopping requires a fixed learning rate, --lr-decay none")
+    return "none"
+
+
 def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    lr_decay = resolve_lr_decay(parser, args)
+
     # Report only TF errors
     if args.quiet_tf:
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -146,14 +200,17 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     augmentations = str(args.augment)
     dev_pickle_paths = [Path(p) for p in args.dev]
     test_pickle_paths = [Path(p) for p in args.test]
-    epochs = int(args.epochs)
+    epochs: int | None = int(args.epochs) if args.epochs is not None else None
+    early_stopping_pickle_path: Path | None = (
+        Path(args.early_stopping) if args.early_stopping is not None else None
+    )
+    stopping_patience: int | None = (
+        int(args.stopping_patience) if args.stopping_patience is not None else None
+    )
     evaluation_from = int(args.evaluation_from)
     evaluation_each = int(args.evaluation_each)
     batch_size = int(args.batch_size)
     learning_rate = float(args.learning_rate)
-    # The parser restricts this to the same two values the Literal names, so
-    # the cast asserts what argparse has already enforced.
-    lr_decay = cast(Literal["none", "cos"], str(args.lr_decay))
     seed = int(args.seed)
     threads = int(args.threads)
     try:
@@ -223,6 +280,12 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
     for d in test_datasets:
         d.print_statistics()
 
+    early_stopping_dataset = None
+    if early_stopping_pickle_path is not None:
+        print("Loading early stopping dataset...")
+        early_stopping_dataset = ZeusDataset.load_from_pickle_file(early_stopping_pickle_path)
+        early_stopping_dataset.print_statistics()
+
     print("Done loading datasets.")
     print("")
 
@@ -270,6 +333,7 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
             learning_rate=learning_rate,
             lr_decay=lr_decay,
             seed=seed,
+            early_stopping_patience=stopping_patience,
         ),
         inference_options_for_evaluation=InferenceOptions(
             batch_size=batch_size,
@@ -277,4 +341,5 @@ def execute(parser: argparse.ArgumentParser, args: argparse.Namespace):
         ),
         logdir_path=logdir_path,
         metrics=metrics,
+        early_stopping_dataset=early_stopping_dataset,
     )

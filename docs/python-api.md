@@ -143,6 +143,8 @@ model.train(
 
 Two things are easy to get wrong here. The token map must come from the training data when training from scratch, and must come from the snapshot when fine-tuning — `Zeus.load` handles the second case for you, and a model cannot learn tokens its map does not contain. And `is_finetuning` is not merely a label: it decides whether an unknown token in the training data is an error or is quietly encoded as `<unk>`.
 
+To stop early instead of training for a fixed length, pass `epochs=None`, `early_stopping_patience=5` and `lr_decay="none"` to `TrainingOptions`, and the dataset to measure on as `early_stopping_dataset=` to `train`. The model is left holding the weights of the best epoch, not the last one.
+
 See [Training Zeus](training-zeus.md) for what the options mean and what lands in the logdir.
 
 
