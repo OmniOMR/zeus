@@ -9,6 +9,11 @@ This file records the package version. A trained model carries its own version, 
 
 ## Unreleased
 
+Nothing yet.
+
+
+## 1.1.0 — 2026-10-29
+
 > **⚠️ `--learning-rate` was ignored until this release.** Every model trained with Zeus 1.0.0 or earlier — including every fine-tuning run — trained at 1e-3, whatever learning rate it was given. A run that passed `--learning-rate 1e-4`, as the fine-tuning guide recommends, fine-tuned at a rate ten times higher than intended. Results and hyperparameter conclusions from such runs should be re-examined, and retraining one with this release will not reproduce it unless it passes `--learning-rate 1e-3`.
 
 
